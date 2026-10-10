@@ -2,7 +2,7 @@
 
 Independent, open-source raster processing core for safe, reusable image transformations.
 
-**Status:** `0.2.0-alpha.1` — experimental. The repository contains source code; no npm publication is implied.
+**Status:** `0.3.0-alpha.1` — experimental. The repository contains source code; no npm publication is implied.
 
 ## Scope
 
@@ -14,7 +14,7 @@ Independent, open-source raster processing core for safe, reusable image transfo
 - Validate input signatures, dimension limits and generated results.
 - Preserve the original bytes. If no transformation is needed, return a byte-identical copy.
 
-This is **not** an AI upscaler, denoiser, subjective-quality optimizer, or image storage system. Those are separate possible future layers. It does not promise perceptual equivalence after lossy encoding.
+This is **not** an AI upscaler, denoiser, independently validated perceptual-quality optimizer, or image storage system. Those are separate possible future layers. It does not promise perceptual equivalence after lossy encoding.
 
 ## Install from source
 
@@ -43,6 +43,14 @@ const result = await core.process(input, {
 
 await writeFile('display.webp', result.data);
 console.log(metadata, result.output, result.passthrough);
+
+// Bounded adaptive search (not the same as guaranteed perceptual equivalence).
+const optimized = await core.optimize(input, {
+  resize: { width: 1200 },
+  minScore: 0.985,
+  formats: ['webp', 'avif', 'jpeg']
+});
+console.log(optimized.output.format, optimized.score, optimized.candidates);
 ```
 
 The package name above is a **planned package identifier**, not a claim of public npm availability. During development, import from a local checkout/workspace package.
@@ -52,6 +60,7 @@ The package name above is a **planned package identifier**, not a claim of publi
 - `createRasterCore({ limits?, engine? })`
 - `core.inspect(data: Uint8Array): Promise<ImageInfo>`
 - `core.process(data: Uint8Array, request?): Promise<ProcessResult>`
+- `core.optimize(data: Uint8Array, options?): Promise<OptimizeResult>`
 - `RasterError.code` indicates validation or processing failures.
 
 Default limits: 32 MiB input, 64 million decoded pixels, 64 MiB output. Outputs are newly allocated bytes. No filesystem, network, caching, or remote hosting dependency is imposed by the core API.
@@ -60,12 +69,12 @@ Default limits: 32 MiB input, 64 million decoded pixels, 64 MiB output. Outputs 
 
 ## Quality policy
 
-See [docs/quality-policy.md](docs/quality-policy.md) for alpha/ICC/orientation regression tests, kernel guidance, and limitations.
+See [docs/quality-policy.md](docs/quality-policy.md) for alpha/ICC/orientation regression tests, kernel guidance, and limitations. The adaptive search and scoring model are described in [docs/optimization.md](docs/optimization.md).
 
 ## Roadmap
 
-- `0.2`: quality-focused resizing/color tests and explicit resampling kernels (current alpha).
-- `0.3`: measurable quality-versus-size optimization and candidate comparison.
+- `0.2`: quality-focused resizing/color tests and explicit resampling kernels.
+- `0.3`: measured quality-versus-size optimization with bounded candidate comparison (current alpha).
 - `0.4`: benchmarks, robustness, documented third-party adapter validation.
 
 ## Contributing

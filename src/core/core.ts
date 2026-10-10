@@ -1,4 +1,6 @@
 import { SharpEngine } from '../engine/sharp-engine.js';
+import { optimizeRaster } from '../optimizer/optimize.js';
+import type { OptimizeRequest, OptimizeResult } from '../optimizer/types.js';
 import { RasterError } from './errors.js';
 import { planProcessing } from './plan.js';
 import { copyAndCheckInput, resolveLimits, validateInfo } from './validate.js';
@@ -61,6 +63,11 @@ export class RasterCore {
       throw new RasterError('OUTPUT_INVALID', 'Unexpected image enlargement');
     }
     return { data: checked, original, output, passthrough: false };
+  }
+
+  /** Select the smallest encoding passing a bounded sampled quality check. */
+  async optimize(input: Uint8Array, request: OptimizeRequest = {}): Promise<OptimizeResult> {
+    return optimizeRaster(this, input, request);
   }
 
   private async inspectCopyOutput(data: Uint8Array): Promise<ImageInfo> {
