@@ -21,7 +21,7 @@ export function planProcessing(info: ImageInfo, request: ProcessRequest = {}): P
   if (request.lossless === false && format === 'png') {
     throw new RasterError('INVALID_REQUEST', 'PNG output is lossless in this version');
   }
-  const { width, height } = request.resize ?? {};
+  const { width, height, kernel } = request.resize ?? {};
   const scaling = Math.min(width === undefined ? Infinity : width / info.width, height === undefined ? Infinity : height / info.height, 1);
   const shouldResize = scaling < 1;
   // Re-encoding should happen only when explicitly needed; avoid generational loss.
@@ -32,6 +32,7 @@ export function planProcessing(info: ImageInfo, request: ProcessRequest = {}): P
     format,
     ...(shouldResize && width !== undefined ? { maxWidth: width } : {}),
     ...(shouldResize && height !== undefined ? { maxHeight: height } : {}),
+    resizeKernel: kernel ?? 'lanczos3',
     ...(request.quality !== undefined ? { quality: request.quality } : {}),
     lossless: format === 'png' || request.lossless === true,
     ...(request.jpegBackground !== undefined ? { jpegBackground: request.jpegBackground } : {}),

@@ -1,5 +1,5 @@
 import { RasterError } from './errors.js';
-import type { CoreLimits, ImageInfo, ProcessRequest, RasterFormat } from './types.js';
+import type { CoreLimits, ImageInfo, ProcessRequest, RasterFormat, ResizeKernel } from './types.js';
 
 export const DEFAULT_LIMITS: Readonly<CoreLimits> = Object.freeze({
   maxInputBytes: 32 * 1024 * 1024,
@@ -61,7 +61,10 @@ export function validateRequest(request: ProcessRequest): void {
     throw new RasterError('INVALID_REQUEST', 'Request must be an object');
   }
   if (request.resize !== undefined) {
-    const { width, height } = request.resize;
+    if (!request.resize || typeof request.resize !== 'object' || Array.isArray(request.resize)) {
+      throw new RasterError('INVALID_REQUEST', 'Resize must be an object');
+    }
+    const { width, height, kernel } = request.resize;
     if (width === undefined && height === undefined) {
       throw new RasterError('INVALID_REQUEST', 'At least one resize dimension is required');
     }
@@ -69,6 +72,10 @@ export function validateRequest(request: ProcessRequest): void {
       if (n !== undefined && (!Number.isSafeInteger(n) || n <= 0)) {
         throw new RasterError('INVALID_REQUEST', 'Resize dimensions must be positive safe integers');
       }
+    }
+    const kernels: ReadonlyArray<ResizeKernel> = ['lanczos3', 'mks2021', 'mitchell', 'nearest'];
+    if (kernel !== undefined && !kernels.includes(kernel)) {
+      throw new RasterError('INVALID_REQUEST', 'Unsupported resize kernel');
     }
   }
   if (request.quality !== undefined && (!Number.isInteger(request.quality) || request.quality < 1 || request.quality > 100)) {

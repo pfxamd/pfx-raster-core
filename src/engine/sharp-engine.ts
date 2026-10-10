@@ -50,7 +50,8 @@ export class SharpEngine implements RasterEngine {
           ...(plan.maxHeight ? { height: plan.maxHeight } : {}),
           fit: 'inside',
           withoutEnlargement: true,
-          kernel: 'lanczos3'
+          // libvips handles premultiplication around Sharp's resize pipeline.
+          kernel: plan.resizeKernel
         });
       }
       if (plan.jpegBackground !== undefined) {
