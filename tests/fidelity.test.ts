@@ -112,6 +112,8 @@ test('format and dimensions are verified across four output formats', async () =
   for (const format of ['jpeg', 'png', 'webp', 'avif'] as const) {
     const result = await core.process(source, { resize: { width: 39 }, format });
     assert.equal(result.output.format, format);
+    const inspectedAgain = await core.inspect(result.data);
+    assert.equal(inspectedAgain.format, format, 'output must be accepted as new input');
     assert.equal(result.output.width, 39);
     assert.equal(result.output.height, 20);
   }

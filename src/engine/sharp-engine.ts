@@ -16,7 +16,9 @@ export class SharpEngine implements RasterEngine {
   async inspect(data: Uint8Array, limits: CoreLimits): Promise<Omit<ImageInfo, 'bytes'>> {
     try {
       const meta = await reader(data, limits).metadata();
-      // Sharp/libvips identify AVIF as a HEIF container using AV1 compression.\n      const decodedFormat = meta.format === 'heif' && meta.compression === 'av1' ? 'avif' : meta.format;\n      if (!decodedFormat || !FORMATS.includes(decodedFormat)) {
+      // Sharp/libvips identify AVIF as a HEIF container using AV1 compression.
+      const decodedFormat = meta.format === 'heif' && meta.compression === 'av1' ? 'avif' : meta.format;
+      if (!decodedFormat || !FORMATS.includes(decodedFormat)) {
         throw new RasterError('UNSUPPORTED_FORMAT', 'Unsupported decoded raster format');
       }
       if ((meta.pages ?? 1) > 1) {
