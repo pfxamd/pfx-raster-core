@@ -16,7 +16,9 @@ export class SharpEngine implements RasterEngine {
   async inspect(data: Uint8Array, limits: CoreLimits): Promise<Omit<ImageInfo, 'bytes'>> {
     try {
       const meta = await reader(data, limits).metadata();
-      if (!meta.format || !FORMATS.includes(meta.format)) {
+      // Sharp/libvips identify AVIF as a HEIF container using AV1 compression.
+      const decodedFormat = meta.format === 'heif' && meta.compression === 'av1' ? 'avif' : meta.format;
+      if (!decodedFormat || !FORMATS.includes(decodedFormat)) {
         throw new RasterError('UNSUPPORTED_FORMAT', 'Unsupported decoded raster format');
       }
       if ((meta.pages ?? 1) > 1) {
@@ -28,7 +30,7 @@ export class SharpEngine implements RasterEngine {
       const orientation = meta.orientation ?? 1;
       const swapped = orientation >= 5 && orientation <= 8;
       return {
-        format: meta.format as RasterFormat,
+        format: decodedFormat as RasterFormat,
         width: swapped ? meta.height : meta.width,
         height: swapped ? meta.width : meta.height,
         hasAlpha: meta.hasAlpha ?? false,
@@ -50,7 +52,8 @@ export class SharpEngine implements RasterEngine {
           ...(plan.maxHeight ? { height: plan.maxHeight } : {}),
           fit: 'inside',
           withoutEnlargement: true,
-          kernel: 'lanczos3'
+          // libvips handles premultiplication around Sharp's resize pipeline.
+          kernel: plan.resizeKernel
         });
       }
       if (plan.jpegBackground !== undefined) {

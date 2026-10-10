@@ -1,6 +1,9 @@
 /** Supported still raster formats in alpha. */
 export type RasterFormat = 'jpeg' | 'png' | 'webp' | 'avif';
 
+/** Resampling policies for photographs vs. hard-edged/pixel-art images. */
+export type ResizeKernel = 'lanczos3' | 'mks2021' | 'mitchell' | 'nearest';
+
 export interface ImageInfo {
   readonly format: RasterFormat;
   /** Display-oriented dimensions (EXIF Orientation accounted for). */
@@ -26,6 +29,11 @@ export interface ResizeRequest {
   readonly width?: number;
   /** Maximum output height. No implicit crop. */
   readonly height?: number;
+  /**
+   * Resampling kernel. Lanczos3 is the photographic default;
+   * nearest preserves hard pixel boundaries when downscaling.
+   */
+  readonly kernel?: ResizeKernel;
 }
 
 export interface ProcessRequest {
@@ -46,6 +54,7 @@ export interface ProcessPlan {
   readonly format: RasterFormat;
   readonly maxWidth?: number;
   readonly maxHeight?: number;
+  readonly resizeKernel: ResizeKernel;
   readonly quality?: number;
   readonly lossless: boolean;
   readonly jpegBackground?: string;

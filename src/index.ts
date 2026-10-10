@@ -5,5 +5,5 @@ export type { RasterErrorCode } from './core/errors.js';
 export { SharpEngine } from './engine/sharp-engine.js';
 export type {
   CoreLimits, ImageInfo, ProcessPlan, ProcessRequest,
-  ProcessResult, RasterEngine, RasterFormat, ResizeRequest
+  ProcessResult, RasterEngine, RasterFormat, ResizeRequest, ResizeKernel
 } from './core/types.js';
