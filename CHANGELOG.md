@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.5.0-alpha.1
+
+- Extract shared platform-neutral raster processing and optimization algorithms.
+- Preserve existing Node Sharp API; add separate browser entry and Canvas/OffscreenCanvas adapter.
+- Parse JPEG, PNG and WebP headers before decode to enforce pixel limits and reject animations.
+- Require explicit permission for browser ICC color conversion; refuse unsupported exact kernels, AVIF, and lossless WebP.
+- Verify actual browser encoder MIME to avoid silent PNG fallback.
+- Add dependency-free browser bundle verification, header regressions and a Chromium end-to-end smoke test.
+
+**Alpha compatibility:** Native browser codec quality and resampling differ from Node; browser output cannot guarantee original embedded ICC preservation.
+
+
 ## 0.4.0-alpha.3
 
 - Add a local-detail quality guard alongside mean RGB/alpha sampled block SSIM.

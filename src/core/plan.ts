@@ -32,7 +32,7 @@ export function planProcessing(info: ImageInfo, request: ProcessRequest = {}): P
     format,
     ...(shouldResize && width !== undefined ? { maxWidth: width } : {}),
     ...(shouldResize && height !== undefined ? { maxHeight: height } : {}),
-    resizeKernel: kernel ?? 'lanczos3',
+    resizeKernel: kernel ?? 'auto',
     ...(request.quality !== undefined ? { quality: request.quality } : {}),
     lossless: format === 'png' || request.lossless === true,
     ...(request.jpegBackground !== undefined ? { jpegBackground: request.jpegBackground } : {}),

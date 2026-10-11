@@ -53,7 +53,7 @@ export class SharpEngine implements RasterEngine {
           fit: 'inside',
           withoutEnlargement: true,
           // libvips handles premultiplication around Sharp's resize pipeline.
-          kernel: plan.resizeKernel
+          kernel: plan.resizeKernel === 'auto' ? 'lanczos3' : plan.resizeKernel
         });
       }
       if (plan.jpegBackground !== undefined) {

@@ -2,7 +2,7 @@
 
 Independent, open-source raster processing core for safe, reusable image transformations.
 
-**Status:** `0.4.0-alpha.3` — experimental. The repository contains source code; no npm publication is implied.
+**Status:** `0.5.0-alpha.1` — experimental. The repository contains source code; no npm publication is implied.
 
 ## Scope
 
@@ -10,7 +10,7 @@ Independent, open-source raster processing core for safe, reusable image transfo
 - Inspect orientation-aware dimensions, alpha, and embedded ICC profile presence.
 - Resize within specified bounds without cropping or enlargement, with an explicit resampling kernel for photographic and pixel-art content.
 - Encode to an explicit format, with optional quality or lossless mode.
-- Preserve embedded ICC profiles by default, or convert explicitly to sRGB.
+- Preserve embedded ICC profiles by default in Node.js; browser conversions require explicit sRGB permission when ICC is present.
 - Validate input signatures, dimension limits and generated results.
 - Preserve the original bytes. If no transformation is needed, return a byte-identical copy.
 
@@ -23,7 +23,7 @@ npm install
 npm run check
 ```
 
-Node.js 20+ is required. The first implementation uses Sharp and libvips; the public API also accepts a separate processing engine.
+Node.js 20+ is required for the Node adapter (Sharp/libvips). A separate browser entry now uses Canvas/OffscreenCanvas and shares validation, optimization and processing policies. Browsers do not need Sharp at runtime.
 
 ## Example
 
@@ -55,6 +55,26 @@ console.log(optimized.output.format, optimized.score, optimized.candidates);
 ```
 
 The package name above is a **planned package identifier**, not a claim of public npm availability. During development, import from a local checkout/workspace package.
+
+## Browser entry (alpha 0.5)
+
+```ts
+import { createRasterCore, probeBrowserRasterCapabilities } from '@pfxamd/raster-core/browser';
+
+const capabilities = await probeBrowserRasterCapabilities();
+const core = createRasterCore();
+const source = new Uint8Array(await file.arrayBuffer());
+const result = await core.process(source, {
+  resize: { width: 1200 },
+  format: 'webp',
+  colorProfile: 'srgb' // Explicitly authorize browser color conversion
+});
+const output = new Blob([new Uint8Array(result.data)], { type: 'image/webp' });
+```
+
+The browser adapter currently decodes/encodes **still PNG, JPEG and WebP** using browser-native codecs (WebP must be supported by the browser). **AVIF is not implemented** in this adapter. Browsers can silently substitute PNG for unsupported encoders, so every encoded MIME result is checked. An unchanged image can be returned byte-identically. PNG re-encoding is lossless at the canvas pixel representation, but no cross-engine pixel identity is promised. Browser WebP/AVIF lossless modes and explicit Lanczos/Mitchell/MKS2021 kernels are **rejected** rather than inaccurately emulated. Native smoothing is used for default resize, and explicit `nearest` uses nearest neighbor. Embedded ICC metadata is **not preserved** during browser transformations; if the input contains ICC, `colorProfile: 'srgb'` must be explicitly selected. Canvas color management can vary by browser and needs independent validation.
+
+The browser entry imports **no Node built-ins or Sharp code**. Use this entry directly rather than the Node default export in browser-targeted applications. See [browser support policy](docs/browser-adapter.md).
 
 ## API
 

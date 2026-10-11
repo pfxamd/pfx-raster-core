@@ -1,6 +1,6 @@
 {
   "name": "@pfxamd/raster-core",
-  "version": "0.4.0-alpha.3",
+  "version": "0.5.0-alpha.1",
   "description": "Independent, reusable raster image processing core with safe transformations and validation.",
   "type": "module",
   "license": "Apache-2.0",
@@ -17,6 +17,10 @@
     ".": {
       "types": "./dist/src/index.d.ts",
       "import": "./dist/src/index.js"
+    },
+    "./browser": {
+      "types": "./dist/src/browser.d.ts",
+      "import": "./dist/src/browser.js"
     }
   },
   "types": "./dist/src/index.d.ts",
@@ -24,17 +28,21 @@
     "clean": "node -e \"import('node:fs').then(m=>m.rmSync('dist',{recursive:true,force:true}))\"",
     "build": "tsc -p tsconfig.json",
     "test": "npm run build && node --test dist/tests/*.test.js",
-    "check": "npm run test",
+    "check": "npm run test && npm run check:browser",
     "prepack": "npm run check",
     "benchmark": "npm run build && node dist/benchmarks/run.js",
-    "benchmark:smoke": "npm run build && node dist/benchmarks/run.js --iterations=1 --smoke --json"
+    "benchmark:smoke": "npm run build && node dist/benchmarks/run.js --iterations=1 --smoke --json",
+    "check:browser": "npm run build && esbuild src/browser.ts --bundle --platform=browser --format=esm --target=es2022 --outfile=dist/browser-bundle.mjs --metafile=dist/browser-metafile.json && node tests/assert-browser-bundle.mjs",
+    "check:browser:runtime": "node tests/browser-runtime.mjs"
   },
   "dependencies": {
     "sharp": "^0.34.1"
   },
   "devDependencies": {
     "@types/node": "^22.15.0",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "esbuild": "^0.25.10",
+    "playwright-core": "^1.55.0"
   },
   "publishConfig": {
     "access": "public"
