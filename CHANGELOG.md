@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.5.0-alpha.4
+
+- Speed up browser Lanczos3 resampling using packed typed filter taps and remove the second Float32 RGBA output buffer.
+- Retain premultiplied-alpha math, the 64 MiB intermediate allocation guard, and no-enlargement behavior.
+- Add a synthetic worker benchmark across three image sizes with UI frame observations and theoretical allocation counts (not peak RSS).
+- Verify fidelity separately against the previous algorithm on a real photograph; that photo is not committed.
+
+
 ## 0.5.0-alpha.3
 
 - Add antialiased, alpha-premultiplied Lanczos3 RGBA downsampling in the browser engine instead of relying on unspecified canvas smoothing.
