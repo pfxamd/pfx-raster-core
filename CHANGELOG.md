@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.0-alpha.3
+
+- Add antialiased, alpha-premultiplied Lanczos3 RGBA downsampling in the browser engine instead of relying on unspecified canvas smoothing.
+- Export `resizeToRgba()` and `resizeRgbaLanczos3()` so apps can encode downscaled pixels directly, without intermediate PNG files.
+- Bound resampling working memory and validate no enlargement; retain explicit color-profile conversion consent.
+- Add transparent-edge, fine-line, solid-color, buffer aliasing and real-browser tests.
+
+**Note:** browser Lanczos3 filters 8-bit sRGB and is not identical to libvips or a linear-light resampler.
+
+
 ## 0.5.0-alpha.2
 
 - Build compiled browser/Node entry points during Git dependency installation via the npm `prepare` lifecycle.
