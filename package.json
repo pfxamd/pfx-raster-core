@@ -1,6 +1,6 @@
 {
   "name": "@pfxamd/raster-core",
-  "version": "0.5.0-alpha.2",
+  "version": "0.5.0-alpha.3",
   "description": "Independent, reusable raster image processing core with safe transformations and validation.",
   "type": "module",
   "license": "Apache-2.0",

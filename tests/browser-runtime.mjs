@@ -65,10 +65,8 @@ try {
       resize: { width: 80 }, formats: ['webp', 'jpeg'], qualities: [72, 90],
       maxOutputBytes: 'input', minScore: 0.4, colorProfile: 'srgb'
     });
-    let kernelError = '';
-    try {
-      await core.process(original, { resize: { width: 80, kernel: 'lanczos3' } });
-    } catch (error) { kernelError = error.code; }
+    const explicitLanczos = await core.process(original, { resize: { width: 80, kernel: 'lanczos3' }, format: 'png', colorProfile: 'srgb' });
+    const raw = await mod.resizeToRgba(original, { resize: { width: 80 }, colorProfile: 'srgb' });
     let avifError = '';
     try {
       await core.process(original, { format: 'avif' });
@@ -94,7 +92,7 @@ try {
       resized: { format: webp.output.format, width: webp.output.width, height: webp.output.height },
       optimizer: { score: optimization.score, bytes: optimization.data.byteLength,
         inputBytes: original.byteLength, format: optimization.output.format },
-      kernelError, avifError, preserveIccError, losslessError,
+      lanczosWidth: explicitLanczos.output.width, rawBytes: raw.data.length, avifError, preserveIccError, losslessError,
       nearestWidth: nearest.output.width, flattenError, alpha: alphaOutput.output.hasAlpha,
       encoders: caps.encoding
     };
@@ -108,7 +106,8 @@ try {
   assert.deepEqual(outcome.resized, { format: 'webp', width: 80, height: 50 });
   assert.ok(outcome.optimizer.bytes <= outcome.optimizer.inputBytes);
   assert.ok(outcome.optimizer.score >= 0.4);
-  assert.equal(outcome.kernelError, 'INVALID_REQUEST');
+  assert.equal(outcome.lanczosWidth, 80);
+  assert.equal(outcome.rawBytes, 80 * 50 * 4);
   assert.equal(outcome.losslessError, 'UNSUPPORTED_FORMAT');
   assert.equal(outcome.nearestWidth, 80);
   assert.equal(outcome.flattenError, 'INVALID_REQUEST');

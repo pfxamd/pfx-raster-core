@@ -109,7 +109,7 @@ export async function probeBrowserRasterCapabilities(): Promise<BrowserRasterCap
     } catch { /* Unsupported encoder. */ }
   }
   return { decoding, encoding, offscreenCanvas,
-    exactResamplingKernels: ['nearest'],
+    exactResamplingKernels: ['nearest', 'lanczos3'],
     preservesEmbeddedIccOnTransform: false,
     guaranteesLosslessWebpOrAvif: false };
 }

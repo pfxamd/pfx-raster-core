@@ -1,4 +1,4 @@
-# Browser adapter policy — 0.5.0-alpha.1
+# Browser adapter policy — 0.5.0-alpha.3
 
 ## Platform separation
 
@@ -20,9 +20,9 @@ PNG, the operation rejects the result. AVIF input and AVIF encoding are not
 supported by this first adapter; use the Node engine for AVIF.
 
 - Processing without changes returns an independent byte-identical copy.
-- A default resize uses native high-quality canvas smoothing. The browser
-  cannot guarantee the exact Sharp lanczos3, mks2021 or mitchell filters;
-  explicit requests for those kernels are rejected. Explicit nearest is
+- A default resize uses a bounded Lanczos3 RGBA filter, convolving antialiased source pixels and premultiplying alpha before filtering. This runs in 8-bit sRGB space (not linear-light); it differs from libvips and cannot guarantee identical output. The browser
+  cannot guarantee exactly matching Sharp/libvips Lanczos3, mks2021 or mitchell implementations;
+  explicit requests for mks2021 and mitchell are rejected. The browser now supports its own explicit lanczos3 and nearest; nearest is
   supported.
 - JPEG alpha flattening still requires an explicit background.
 - Lossless canvas PNG is supported at the rendered pixel representation.

@@ -37,6 +37,9 @@ export function optimizeRaster(
 }
 
 export { BrowserEngine } from './browser/browser-engine.js';
+export { resizeToRgba } from './browser/raw.js';
+export { resizeRgbaLanczos3 } from './browser/resample.js';
+export type { RawRaster } from './browser/resample.js';
 export { BrowserQualityEvaluator } from './browser/quality-evaluator.js';
 export { probeBrowserRasterCapabilities } from './browser/canvas.js';
 export type { BrowserRasterCapabilities } from './browser/canvas.js';
