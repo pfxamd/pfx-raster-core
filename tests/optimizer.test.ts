@@ -75,7 +75,8 @@ test('optimizer generates bounded candidates and preserves input bytes', async (
 test('default optimization handles AVIF candidates and retains valid image', async () => {
   const source = await fixture();
   const result = await core.optimize(source, { resize: { width: 64 }, minScore: 0.75 });
-  assert.equal(result.candidates.length, 10);
+  assert.equal(result.candidates.length, 13);
+  assert.ok(result.candidates.some(c => c.quality === 100));
   assert.ok(result.candidates.some(c => c.format === 'avif' && c.bytes !== undefined));
   const meta = await core.inspect(result.data);
   assert.equal(meta.width, 64);
@@ -128,7 +129,12 @@ test('invalid formats, candidate budgets and scoring constraints are rejected', 
     { minScore: Number.NaN },
     { maxEvaluationPixels: 0 },
     { maxEvaluationPixels: 2_000_000 },
-    { resize: { width: 0 } }
+    { resize: { width: 0 } },
+    { maxOutputBytes: 0 },
+    { maxOutputBytes: -1 },
+    { maxOutputBytes: 10.5 },
+    { maxOutputBytes: Number.NaN },
+    { maxOutputBytes: 'source' }
   ];
   for (const request of invalids) {
     await assert.rejects(
@@ -146,4 +152,71 @@ test('optimizer reports rejected candidates rather than concealing quality failu
   assert.equal(result.output.format, 'png');
   assert.equal(result.candidates[1]?.accepted, false);
   assert.equal(result.candidates[1]?.reason, 'below-threshold');
+});
+
+test('no-op resize keeps compressed source bytes when the bounds already fit', async () => {
+  const source = await sharp(Buffer.from(patternedRaw(128, 72)), {
+    raw: { width: 128, height: 72, channels: 3 }
+  }).jpeg({ quality: 62 }).toBuffer();
+  const result = await core.optimize(source, {
+    resize: { width: 500, height: 300 },
+    formats: ['jpeg'], qualities: [95], minScore: 1,
+    maxOutputBytes: 'input'
+  });
+  assert.equal(result.passthrough, true);
+  assert.deepEqual(Buffer.from(result.data), source);
+  assert.ok(result.candidates.some(c => c.reason === 'original'));
+});
+
+test('input-sized strict budget preserves quality or fails, never grows resized output', async () => {
+  const source = await sharp(Buffer.from(patternedRaw(128, 72)), {
+    raw: { width: 128, height: 72, channels: 3 }
+  }).jpeg({ quality: 62 }).toBuffer();
+  const snapshot = Buffer.from(source);
+  const reference = await core.process(source, { resize: { width: 64 }, format: 'png' });
+  assert.ok(reference.data.byteLength > source.byteLength, 'fixture must exercise oversized reference');
+  await assert.rejects(
+    () => core.optimize(source, {
+      resize: { width: 64 }, formats: ['jpeg'], qualities: [40],
+      minScore: 1, maxOutputBytes: 'input'
+    }),
+    (error: unknown) => error instanceof RasterError && error.code === 'OUTPUT_TOO_LARGE'
+  );
+  assert.deepEqual(source, snapshot);
+});
+
+test('input-sized budget accepts an encoded result when the quality gate allows it', async () => {
+  const source = await fixture();
+  const result = await core.optimize(source, {
+    resize: { width: 64 }, formats: ['webp'], qualities: [65, 85],
+    minScore: 0.1, maxOutputBytes: 'input'
+  });
+  assert.equal(result.output.width, 64);
+  assert.ok(result.data.byteLength <= source.byteLength);
+  assert.ok(result.score >= 0.1);
+});
+
+test('numeric size budget is strict and avoids unnecessary quality comparisons', async () => {
+  const source = await fixture();
+  let calls = 0;
+  await assert.rejects(
+    () => optimizeRaster(core, source, {
+      resize: { width: 64 }, formats: ['webp'], qualities: [70],
+      minScore: 0.5, maxOutputBytes: 1
+    }, { async compare() { calls++; return 1; } }),
+    (error: unknown) => error instanceof RasterError && error.code === 'OUTPUT_TOO_LARGE'
+  );
+  assert.equal(calls, 0);
+});
+
+test('lossless fallback remains available when no strict size budget is requested', async () => {
+  const source = await sharp(Buffer.from(patternedRaw(128, 72)), {
+    raw: { width: 128, height: 72, channels: 3 }
+  }).jpeg({ quality: 62 }).toBuffer();
+  const result = await core.optimize(source, {
+    resize: { width: 64 }, formats: ['jpeg'], qualities: [40], minScore: 1
+  });
+  assert.equal(result.output.format, 'png');
+  assert.equal(result.score, 1);
+  assert.ok(result.data.byteLength > source.byteLength);
 });
