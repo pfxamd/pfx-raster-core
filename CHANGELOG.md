@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.0-alpha.2
+
+- Build compiled browser/Node entry points during Git dependency installation via the npm `prepare` lifecycle.
+- Preserve existing source distribution and package export paths; no runtime behavior changes.
+
+
 ## 0.5.0-alpha.1
 
 - Extract shared platform-neutral raster processing and optimization algorithms.
