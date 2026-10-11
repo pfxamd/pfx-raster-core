@@ -88,3 +88,39 @@ full browser RSS, decoder/native memory or GPU memory.
 
 There is no supported portable browser API in this CI setup for exact worker,
 decoder and GPU resident-memory peaks. Those fields are **unavailable**, not 0.
+
+## Isolated process-retention series (0.6.0-alpha.3)
+
+Run `npm run benchmark:retention`. The instrumented parent starts six
+**independent** Node processes, each using `--expose-gc`, one warm-up
+conversion, then 24 real JPEG-to-WebP resize operations in four batches of six.
+Two fresh runs per scenario provide limited replication; scenario order is
+reversed between rounds. There are three controlled scenarios:
+
+- `discard-default`: do not retain result buffers; Sharp cache defaults.
+- `discard-cache-disabled`: do not retain buffers; disable Sharp cache in
+  that process (not in the production core).
+- `retain-default`: deliberately retain each encoded output buffer as an
+  interpretation control. This retains small compressed outputs, not RGBA.
+
+After each batch the child requests V8 GC, briefly yields 40ms, and samples
+process RSS, heap, external/arrayBuffer memory, OS process-lifetime RSS
+high-water and Sharp cache counters. The first sample is taken **after**
+fixture creation and warm-up. The same deterministic encoded input, resize,
+format and output digest are verified in all six processes. CI retains full
+JSON for comparison, and gates only functional/report invariants, **never an
+absolute RSS value**.
+
+### Reading the series
+
+Observe **post-warm-up RSS across batches**, not process-lifetime high-water
+as a per-image figure. Compare discarded vs deliberately retained outputs
+and cache-enabled vs disabled processes. Memory managers may keep freed pages
+resident indefinitely, Sharp/native allocations are not guaranteed to be
+reclaimed immediately, and requested V8 GC does not collect native caches.
+RSS growth over only 24 operations is not evidence of a leak; flat RSS is not
+proof of absence of a leak. For investigation, repeat for many longer sessions
+under controlled workloads, use native heap tools, and compare independent
+process replicates on a fixed host. These Linux/Node measurements do **not**
+measure an actual browser/mobile device, GPU allocations or decoded Canvas
+surfaces. No input image content is uploaded.

@@ -1,6 +1,6 @@
 # Raster Core test coverage and measurement limits
 
-Version: 0.6.0-alpha.2. This file records **test coverage**, not a claim of device-wide production guarantees.
+Version: 0.6.0-alpha.3. This file records **test coverage**, not a claim of device-wide production guarantees.
 
 ## Verified automatically
 
@@ -25,6 +25,14 @@ OS process-lifetime RSS high-water during multi-megapixel synthetic conversion,
 with Chromium Worker wall time and observed frame gaps. These numbers are
 observations and CI artifacts, not proof of a per-image browser/device peak.
 See [benchmark methodology](benchmarks.md).
+
+## Repeated isolated-process retention observations
+
+Automated Linux CI now performs 2 independent runs of 3 Sharp cache/output
+retention scenarios (24 real conversions per run). Post-warm-up RSS snapshots,
+native/cache counters and deliberate retained-buffer controls are captured as
+a JSON artifact. This is observational and cannot establish the presence or
+absence of a native or browser memory leak. See [benchmark methodology](benchmarks.md).
 
 ## Next measurement gate
 
