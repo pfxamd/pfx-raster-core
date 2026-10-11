@@ -32,3 +32,14 @@ Future work should add licensed photographic samples, annotated fine-text images
 ## Limits
 
 The alpha currently handles still raster images only. Animation, HDR pipeline guarantees, high bit-depth preservation, print-color fidelity, learned super-resolution, no-reference perceptual scoring and guarantees of identical pixels after lossy compression are out of scope.
+
+## Alpha 0.4 verification coverage
+
+The automated suite adds synthetic gradient/hard-edge scenes, line detail,
+transparency visibility checks, decoding of truncated inputs, malformed
+requests, and concurrent processing safety. Synthetic checks are necessary
+regressions but do not establish photographic, tiny-text or print fidelity.
+
+For reproducible size/timing comparisons and how to interpret the numbers,
+see [benchmarks.md](benchmarks.md). Third-party adapters and licensed real-world
+image sets remain work for a later alpha.
