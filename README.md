@@ -2,7 +2,7 @@
 
 Independent, open-source raster processing core for safe, reusable image transformations.
 
-**Status:** `0.5.0-alpha.1` — experimental. The repository contains source code; no npm publication is implied.
+**Status:** `0.5.0-alpha.2` — experimental. The repository contains source code; no npm publication is implied.
 
 ## Scope
 
@@ -15,6 +15,8 @@ Independent, open-source raster processing core for safe, reusable image transfo
 - Preserve the original bytes. If no transformation is needed, return a byte-identical copy.
 
 This is **not** an AI upscaler, denoiser, independently validated perceptual-quality optimizer, or image storage system. Those are separate possible future layers. It does not promise perceptual equivalence after lossy encoding.
+
+Git dependency installs now run a `prepare` step that compiles `dist/src` before packaging. This supports pinned GitHub consumption while npm publication remains separate.
 
 ## Install from source
 
