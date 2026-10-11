@@ -2,6 +2,7 @@ import { RasterError } from '../core/errors.js';
 import type { CoreLimits, ImageInfo, ProcessPlan, RasterEngine } from '../core/types.js';
 import { decodeBitmap, encodeCanvas, makeCanvas } from './canvas.js';
 import { inspectBrowserHeader } from './header.js';
+import { resizeToRgba } from './raw.js';
 
 export class BrowserEngine implements RasterEngine {
   async inspect(data: Uint8Array, limits: CoreLimits): Promise<Omit<ImageInfo, 'bytes'>> {
@@ -36,6 +37,7 @@ export class BrowserEngine implements RasterEngine {
         'Canvas cannot guarantee lossless WebP or AVIF encoding');
     }
     if (plan.resizeKernel !== 'auto' && plan.resizeKernel !== 'nearest' &&
+        plan.resizeKernel !== 'lanczos3' &&
         (plan.maxWidth !== undefined || plan.maxHeight !== undefined)) {
       throw new RasterError('INVALID_REQUEST',
         'Browser native canvas cannot guarantee the explicitly requested resampling kernel');
@@ -69,9 +71,25 @@ export class BrowserEngine implements RasterEngine {
         ctx.fillStyle = plan.jpegBackground;
         ctx.fillRect(0, 0, width, height);
       }
-      ctx.imageSmoothingEnabled = plan.resizeKernel !== 'nearest';
-      ctx.imageSmoothingQuality = 'high';
-      ctx.drawImage(bitmap, 0, 0, width, height);
+      if (factor < 1 && (plan.resizeKernel === 'auto' || plan.resizeKernel === 'lanczos3')) {
+        const raw = await resizeToRgba(data, {
+          resize: {
+            ...(plan.maxWidth === undefined ? {} : { width: plan.maxWidth }),
+            ...(plan.maxHeight === undefined ? {} : { height: plan.maxHeight }),
+            kernel: 'lanczos3'
+          },
+          colorProfile: plan.colorProfile
+        }, limits);
+        // putImageData replaces pixels rather than alpha-compositing them.
+        // Render through an RGBA surface to preserve JPEG flatten background.
+        const intermediate = makeCanvas(width, height);
+        intermediate.ctx.putImageData(new ImageData(raw.data, width, height), 0, 0);
+        ctx.drawImage(intermediate.canvas, 0, 0);
+      } else {
+        ctx.imageSmoothingEnabled = plan.resizeKernel !== 'nearest';
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(bitmap, 0, 0, width, height);
+      }
       const output = await encodeCanvas(canvas, plan.format, plan.quality);
       if (output.byteLength > limits.maxOutputBytes) {
         throw new RasterError('OUTPUT_TOO_LARGE', 'Browser output exceeds maxOutputBytes');
