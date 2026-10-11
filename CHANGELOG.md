@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.0-alpha.1
+
+- Extend synthetic robustness tests for corrupted/truncated encoded headers, animation markers, exact byte/pixel limit boundaries, malformed limits, and caller-owned input mutation during in-flight processing.
+- Add a real Chromium no-decode guard for a header-only 24MP declared WebP, verifying the lightweight import does not call `createImageBitmap` or allocate decoded RGBA.
+- Record verified test coverage and remaining physical-memory and cross-browser limitations. No image processing algorithm or public API change.
+- The existing automatic GitHub Release process distributes this prerelease as a versioned compiled archive.
+
 ## 0.5.0-alpha.8
 
 - Distribute this pre-release as a versioned, prebuilt GitHub Release archive with SHA-256 checksum after passing `main` branch CI; no npm account or registry publication is involved.
