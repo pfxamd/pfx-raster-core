@@ -29,7 +29,7 @@ See [benchmark methodology](benchmarks.md).
 ## Repeated isolated-process retention observations
 
 Automated Linux CI now performs 2 independent runs of 3 Sharp cache/output
-retention scenarios (24 real conversions per run). Post-warm-up RSS snapshots,
+retention scenarios (64 real conversions per run). Post-warm-up RSS snapshots,
 native/cache counters and deliberate retained-buffer controls are captured as
 a JSON artifact. This is observational and cannot establish the presence or
 absence of a native or browser memory leak. See [benchmark methodology](benchmarks.md).

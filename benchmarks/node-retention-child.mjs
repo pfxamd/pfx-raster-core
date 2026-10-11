@@ -19,7 +19,7 @@ const cacheDisabled = scenario === 'discard-cache-disabled';
 const retain = scenario === 'retain-default';
 if (cacheDisabled) sharp.cache(false);
 const width = 1920, height = 1280, targetWidth = 960;
-const batchSize = 6, batches = 4;
+const batchSize = 8, batches = 8;
 
 async function makeFixture() {
   const raw = Buffer.allocUnsafe(width * height * 3);
@@ -100,8 +100,8 @@ assert.equal(observations.length, batches + 1);
 const baseline = observations[0];
 const last = observations.at(-1);
 assert.ok(last);
-assert.equal(last.completed, 24);
-assert.equal(last.retainedOutputs, retain ? 24 : 0);
+assert.equal(last.completed, 64);
+assert.equal(last.retainedOutputs, retain ? 64 : 0);
 const report={
   scenario,
   cacheDisabled,

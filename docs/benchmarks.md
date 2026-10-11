@@ -93,7 +93,7 @@ decoder and GPU resident-memory peaks. Those fields are **unavailable**, not 0.
 
 Run `npm run benchmark:retention`. The instrumented parent starts six
 **independent** Node processes, each using `--expose-gc`, one warm-up
-conversion, then 24 real JPEG-to-WebP resize operations in four batches of six.
+conversion, then 64 real JPEG-to-WebP resize operations in eight batches of eight.
 Two fresh runs per scenario provide limited replication; scenario order is
 reversed between rounds. There are three controlled scenarios:
 
@@ -118,7 +118,7 @@ as a per-image figure. Compare discarded vs deliberately retained outputs
 and cache-enabled vs disabled processes. Memory managers may keep freed pages
 resident indefinitely, Sharp/native allocations are not guaranteed to be
 reclaimed immediately, and requested V8 GC does not collect native caches.
-RSS growth over only 24 operations is not evidence of a leak; flat RSS is not
+RSS growth over 64 operations is not evidence of a leak; flat RSS is not
 proof of absence of a leak. For investigation, repeat for many longer sessions
 under controlled workloads, use native heap tools, and compare independent
 process replicates on a fixed host. These Linux/Node measurements do **not**

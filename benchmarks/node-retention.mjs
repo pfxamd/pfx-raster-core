@@ -28,10 +28,10 @@ for (let round = 1; round <= rounds; round++) {
     assert.ok(execution.stdout.trim(), scenario+' did not produce a report');
     const sample = JSON.parse(execution.stdout.trim());
     assert.equal(sample.scenario,scenario);
-    assert.equal(sample.conversions,24);
-    assert.equal(sample.observations.length,5);
-    assert.equal(sample.batchDurationMs.length,4);
-    assert.deepEqual(sample.observations.map(x=>x.completed),[0,6,12,18,24]);
+    assert.equal(sample.conversions,64);
+    assert.equal(sample.observations.length,9);
+    assert.equal(sample.batchDurationMs.length,8);
+    assert.deepEqual(sample.observations.map(x=>x.completed),[0,8,16,24,32,40,48,56,64]);
     for (const point of sample.observations) {
       for (const key of ['rssBytes','heapUsedBytes','externalBytes',
         'arrayBuffersBytes','retainedOutputBytes']) {
@@ -45,7 +45,7 @@ for (let round = 1; round <= rounds; round++) {
     assert.equal(sample.output.sha256,expectedOutput);
     const retained = scenario === 'retain-default';
     assert.equal(sample.observations.at(-1).retainedOutputs,
-      retained ? 24 : 0);
+      retained ? 64 : 0);
     runs.push({round,...sample});
   }
 }
@@ -59,12 +59,12 @@ const report={
     freshProcessPerScenario:true,
     warmupPerProcess:true,
     requestedV8Gc:true,
-    repeatedConversionsPerProcess:24,
+    repeatedConversionsPerProcess:64,
     rounds,
-    observationsPerProcess:5,
+    observationsPerProcess:9,
     scenarios,
     interpretation:'RSS deltas in warmed independent processes; expected Sharp caches, native allocator retention, and intentionally held output buffers may cause growth without a leak.',
-    doesNotMeasure:'True per-operation peak RSS, isolated native allocation ownership, mobile/browser decoder and GPU memory. No leak verdict from 24 conversions.',
+    doesNotMeasure:'True per-operation peak RSS, isolated native allocation ownership, mobile/browser decoder and GPU memory. No leak verdict from 64 conversions.',
     thresholds:'No pass/fail RSS or timing thresholds on shared CI runners.',
   },
   runs,

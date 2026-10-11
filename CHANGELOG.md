@@ -2,8 +2,8 @@
 
 ## 0.6.0-alpha.3
 
-- Measure 24 actual encoded-image conversions in each of 6 independently spawned Node processes; compare warmed discarded output, disabled Sharp cache and deliberately retained output controls.
-- Save RSS/heap/external memory and native high-water series after each six conversions, with repeated process runs and SHA-256 equality checks.
+- Measure 64 actual encoded-image conversions in each of 6 independently spawned Node processes; compare warmed discarded output, disabled Sharp cache and deliberately retained output controls.
+- Save RSS/heap/external memory and native high-water series after each eight conversions, with repeated process runs and SHA-256 equality checks.
 - Upload full machine-readable observational reports in CI. No RSS threshold, algorithm change, consumer update or claim of proven memory leakage.
 
 ## 0.6.0-alpha.2
