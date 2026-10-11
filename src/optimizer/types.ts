@@ -15,7 +15,7 @@ export interface OptimizeRequest {
    * Without a budget, a high-fidelity resized output may exceed input bytes.
    */
   readonly maxOutputBytes?: number | 'input';
-  /** Minimum measured, reference-relative block SSIM score (0..1). */
+  /** Minimum heuristic sampled score (0..1), enforcing both global and salient-detail similarity. */
   readonly minScore?: number;
   /** ICC handling, matching core.process(). */
   readonly colorProfile?: 'preserve' | 'srgb';
@@ -28,7 +28,7 @@ export interface OptimizationCandidate {
   /** Absent for lossless reference or original source. */
   readonly quality?: number;
   readonly bytes?: number;
-  /** Reference-relative sampled RGB/alpha block SSIM; absent if size alone rejected a candidate. */
+  /** Reference-relative minimum of global and salient local-detail block SSIM; absent if size alone rejected. */
   readonly score?: number;
   readonly accepted: boolean;
   readonly reason?: 'reference' | 'original' | 'below-threshold' | 'not-smaller' | 'over-budget' | 'encode-failed';
@@ -39,5 +39,5 @@ export interface OptimizeResult extends ProcessResult {
   /** Raw lossless reference file bytes, not original encoded size. */
   readonly referenceBytes: number;
   readonly candidates: readonly OptimizationCandidate[];
-  readonly metric: 'sampled-rgb-alpha-block-ssim-v1';
+  readonly metric: 'sampled-rgb-alpha-block-ssim-v2-local-detail';
 }
