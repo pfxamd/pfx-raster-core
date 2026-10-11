@@ -1,6 +1,6 @@
 # Distribution and API contract
 
-**Release:** `0.5.0-alpha.8` (experimental). The canonical distribution channel is **GitHub Releases**, not an npm registry. No external account or manual publish commands are required.
+**Release:** `0.6.0-alpha.1` (experimental). The canonical distribution channel is **GitHub Releases**, not an npm registry. No external account or manual publish commands are required.
 
 ## Supported imports
 
@@ -27,7 +27,7 @@ The `.github/workflows/release.yml` workflow listens for a **successful push-to-
 Release asset URL pattern:
 
 ```text
-https://github.com/pfxamd/pfx-raster-core/releases/download/v0.5.0-alpha.8/pfxamd-raster-core-0.5.0-alpha.8.tgz
+https://github.com/pfxamd/pfx-raster-core/releases/download/v0.6.0-alpha.1/pfxamd-raster-core-0.6.0-alpha.1.tgz
 ```
 
 Use that exact URL (or the newer version's exact URL) as a package-manager dependency for browser/Node consumers. It retains imports under the same `@pfxamd/raster-core` package name while eliminating raw commit-SHA dependencies. Verify the asset's availability and integration tests **before** changing each dependent application. The release archive is publicly available without npm login; internet access to GitHub is still required for a fresh installation.

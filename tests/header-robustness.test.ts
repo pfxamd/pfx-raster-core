@@ -115,7 +115,7 @@ test('deterministic corrupted header bytes never produce unrelated runtime excep
     for (let i = 0; i < 160; i++) {
       const edited = Uint8Array.from(fixture);
       const offset = random() % edited.byteLength;
-      edited[offset] ^= (random() % 255) + 1;
+      edited[offset] = edited[offset]! ^ ((random() % 255) + 1);
       try {
         const parsed = inspectRasterHeader(edited);
         // Structural parsing may accept a file whose pixels cannot decode.
