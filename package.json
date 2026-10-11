@@ -1,6 +1,6 @@
 {
   "name": "@pfxamd/raster-core",
-  "version": "0.6.0-alpha.1",
+  "version": "0.6.0-alpha.2",
   "description": "Independent, reusable raster image processing core with safe transformations and validation.",
   "type": "module",
   "license": "Apache-2.0",
@@ -40,7 +40,8 @@
     "check:browser:runtime": "node tests/browser-runtime.mjs",
     "prepare": "npm run build",
     "benchmark:browser": "npm run check:browser && node tests/browser-performance.mjs",
-    "check:package": "node scripts/check-package.mjs"
+    "check:package": "node scripts/check-package.mjs",
+    "benchmark:memory": "node benchmarks/node-memory.mjs"
   },
   "dependencies": {
     "sharp": "^0.34.1"

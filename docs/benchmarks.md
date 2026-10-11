@@ -52,3 +52,39 @@ buffers and runtime caches are outside the reported sizes.
 
 Compare repeated real photographs and devices before drawing performance
 conclusions. Emulated phone viewports are **not physical phone measurements**.
+
+## Real Node/Sharp resident-memory observations (0.6.0-alpha.2)
+
+Run `npm run benchmark:memory` (or `node benchmarks/node-memory.mjs`). The
+script creates deterministic synthetic JPEG and transparent PNG input images,
+then runs warm and repeated **actual Sharp/libvips conversions** across
+multi-megapixel sizes. It does not upload source pixels.
+
+Each operation records wall-clock time, live `process.memoryUsage().rss`
+readings sampled every 10 ms, and the OS-provided `process.resourceUsage().maxRSS`
+**process-lifetime high-water mark** (on Linux reported in KiB and converted to
+bytes). These are real readings of the Node/Sharp operating-system process,
+not predicted RGBA buffer allocations. The sample maximum can miss a short
+spike; the process-lifetime high-water includes fixture generation, native
+codec caches and previous work, so **it is not a workload-specific peak**.
+Node RSS is not the browser worker's RSS, and neither is physical-device
+total-memory use. There are no timing or memory pass/fail thresholds.
+
+CI runs this profiling on Linux/Node 22 and stores a JSON report as a
+GitHub Actions artifact. Its runner hardware and load are uncontrolled, so
+compare only multiple runs on the same environment and workload. Output
+format is schemaVersion 1, with runtime environment, immutable workload
+sizes and byte counts, latency samples, RSS samples and maxRSS high-water.
+
+## Browser event-loop responsiveness observations (0.6.0-alpha.2)
+
+The existing Chromium worker benchmark now records actual
+`requestAnimationFrame` sample gaps while each Worker processes synthetic
+RGBA images. It reports maximum gap and count of gaps above 50 ms. These
+are UI responsiveness indicators, not CPU utilization or proof of smooth
+operation on every phone. Browser measurements continue to report known
+typed-array sizes **only as allocated-buffer estimates**, never as measured
+full browser RSS, decoder/native memory or GPU memory.
+
+There is no supported portable browser API in this CI setup for exact worker,
+decoder and GPU resident-memory peaks. Those fields are **unavailable**, not 0.

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.0-alpha.2
+
+- Add reproducible large-image Node/Sharp profiling with measured elapsed time, sampled process RSS and operating-system process RSS high-water mark; attach CI JSON reports.
+- Expand the existing Chromium worker benchmark with observed UI frame-gap counts and maximum frame gap (non-gating).
+- Document limitations: synthetic inputs, lifetime process high-water, shared CI, and unavailable full mobile/browser memory measurements.
+- Preserve all raster algorithms, limits, exports and downstream dependencies.
+
 ## 0.6.0-alpha.1
 
 - Extend synthetic robustness tests for corrupted/truncated encoded headers, animation markers, exact byte/pixel limit boundaries, malformed limits, and caller-owned input mutation during in-flight processing.

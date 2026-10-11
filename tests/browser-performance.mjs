@@ -62,9 +62,20 @@ try {
     for (const work of workloads) {
       const worker = new Worker('/benchmark-worker.js', { type: 'module' });
       let frames = 0;
+      let gapsAbove50ms = 0;
+      let maxFrameGapMs = 0;
+      let previousFrameTime = null;
       let running = true;
-      const frame = () => {
-        if (running) { frames++; requestAnimationFrame(frame); }
+      const frame = timestamp => {
+        if (!running) return;
+        if (previousFrameTime !== null) {
+          const gap = timestamp - previousFrameTime;
+          maxFrameGapMs = Math.max(maxFrameGapMs, gap);
+          if (gap > 50) gapsAbove50ms++;
+        }
+        previousFrameTime = timestamp;
+        frames++;
+        requestAnimationFrame(frame);
       };
       requestAnimationFrame(frame);
       try {
@@ -76,6 +87,8 @@ try {
         results.push({
           ...work, ...result,
           uiFrames: frames,
+          uiMaxFrameGapMs: maxFrameGapMs,
+          uiGapsAbove50ms: gapsAbove50ms,
           intermediateFloatBytes: result.intermediatePixels * 16,
           removedSecondFloatBytes: result.outputBytes * 4
         });
@@ -89,14 +102,16 @@ try {
   for (const row of report) {
     if (!Number.isFinite(row.durationMs) || row.durationMs < 0 ||
         row.outputBytes !== row.targetWidth * row.targetHeight * 4 ||
-        row.uiFrames < 1) {
+        row.uiFrames < 1 || !Number.isFinite(row.uiMaxFrameGapMs) ||
+        row.uiGapsAbove50ms < 0) {
       throw new Error('Invalid benchmark or stalled main-thread UI');
     }
   }
   process.stdout.write(JSON.stringify({
     test: 'browser-worker-synthetic-lanczos',
     browser: await browser.version(),
-    caveat: 'Timings are observational; byte counts describe allocated arrays, not measured peak process RSS.',
+    caveat: 'Worker timing and UI frame gaps are observations; typed-array byte counts are not measured browser/worker, decoder, GPU or physical-device peak RSS.',
+    fullBrowserMemory: { kind: 'unavailable', peakRssBytes: null },
     results: report
   }, null, 2) + '\n');
 } finally {
