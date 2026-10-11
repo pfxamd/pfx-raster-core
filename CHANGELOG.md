@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.4.0-alpha.3
+
+- Add a local-detail quality guard alongside mean RGB/alpha sampled block SSIM.
+- Use the lower of global score and the 5th-percentile of detailed blocks; both must pass `minScore` before selecting a lossy encoding.
+- Keep `compareRgbaBlockSsim` for global-only score compatibility and export `evaluateRgbaQuality` for diagnostics.
+- Version the changed optimization metric as `sampled-rgb-alpha-block-ssim-v2-local-detail` and add targeted synthetic regressions.
+- Real-world development evaluation exposed previously missed fine-detail degradation; no user image is committed.
+
+**Alpha scoring change:** numerical thresholds are not directly comparable with older metric values. Sampling still cannot guarantee tiny-text fidelity.
+
+
 ## 0.4.0-alpha.2
 
 - Add opt-in `maxOutputBytes: 'input' | number` to optimization, enforcing encoded-size constraints without weakening `minScore`.
