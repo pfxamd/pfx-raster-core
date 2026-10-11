@@ -29,3 +29,6 @@ jobs:
         if: matrix.node-version == 22
         run: npm run benchmark -- --iterations=3 --json
       - run: npm pack --dry-run
+      - name: Verify installed tarball and public API entrypoints
+        if: matrix.node-version == 22
+        run: npm run check:package
