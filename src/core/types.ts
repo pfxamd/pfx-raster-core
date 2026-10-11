@@ -32,7 +32,7 @@ export interface ResizeRequest {
   /**
    * Resampling kernel. Lanczos3 is the photographic default;
    * nearest preserves hard pixel boundaries when downscaling.
-   * When omitted, Node uses Lanczos3 while browsers use native high-quality smoothing.
+   * When omitted, Node uses libvips Lanczos3 and the browser uses a separate RGBA Lanczos3 implementation.
    */
   readonly kernel?: ResizeKernel;
 }
