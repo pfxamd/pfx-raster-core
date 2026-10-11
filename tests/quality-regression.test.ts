@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import sharp from 'sharp';
-import { compareRgbaBlockSsim, createRasterCore } from '../src/index.js';
+import { compareRgbaBlockSsim, evaluateRgbaQuality, createRasterCore } from '../src/index.js';
 import { SharpQualityEvaluator } from '../src/optimizer/sharp-evaluator.js';
 
 const core = createRasterCore();
@@ -103,4 +103,56 @@ test('fine-detail transparent scene survives lossless resizing with alpha', asyn
   assert.equal(result.output.hasAlpha, true);
   const raw = await sharp(Buffer.from(result.data)).ensureAlpha().raw().toBuffer();
   assert.ok(raw.some((value, i) => i % 4 === 3 && value > 0 && value < 255));
+});
+
+
+test('localized loss is rejected even when global block score passes 0.985', () => {
+  const width = 256;
+  const height = 256;
+  const reference = new Uint8Array(width * height * 4);
+  const candidate = new Uint8Array(reference.length);
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const off = (y * width + x) * 4;
+      const textured = y < 48;
+      const value = textured && (x + y) % 2 === 0 ? 230 : 35;
+      const tone = textured ? value : 128;
+      reference.set([tone, tone, tone, 255], off);
+      candidate.set([tone, tone, tone, 255], off);
+      if (x < 96 && y < 8) candidate.set([128, 128, 128, 255], off);
+    }
+  }
+  const scores = evaluateRgbaQuality(reference, candidate, width, height);
+  assert.ok(scores.detailedBlocks >= 100);
+  assert.ok(scores.globalScore > 0.985, 'mean-channel-only score should miss localized defect');
+  assert.ok(scores.localDetailScore < 0.985, 'salient detail score should expose the defect');
+  assert.ok(scores.score < 0.985, 'optimizer gate must take the weaker criterion');
+  assert.equal(compareRgbaBlockSsim(reference, candidate, width, height), scores.globalScore);
+});
+
+test('the detail score cannot mark an exact copy as degraded', () => {
+  const raw = scene(112, 96, true);
+  const encoded = new Uint8Array(112 * 96 * 4);
+  for (let i = 0, j = 0; i < raw.length; i += 4, j += 4) {
+    encoded[j] = raw[i]!;
+    encoded[j + 1] = raw[i + 1]!;
+    encoded[j + 2] = raw[i + 2]!;
+    encoded[j + 3] = raw[i + 3]!;
+  }
+  const scores = evaluateRgbaQuality(encoded, encoded.slice(), 112, 96);
+  assert.equal(scores.globalScore, 1);
+  assert.equal(scores.localDetailScore, 1);
+  assert.equal(scores.score, 1);
+});
+
+test('local artifact check falls back to global score on flat tiny images', () => {
+  const data = new Uint8Array(16 * 16 * 4);
+  const changed = new Uint8Array(data.length);
+  for (let i = 0; i < data.length; i += 4) {
+    data.set([140, 180, 210, 255], i);
+    changed.set([140, 180, 208, 255], i);
+  }
+  const scores = evaluateRgbaQuality(data, changed, 16, 16);
+  assert.equal(scores.detailedBlocks, 0);
+  assert.equal(scores.score, scores.globalScore);
 });
