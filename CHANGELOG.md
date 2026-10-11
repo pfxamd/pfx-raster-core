@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.0-alpha.1
+
+- Add synthetic fine-detail, gradient, chromatic and alpha regression tests.
+- Add truncated-input, limits, malformed-request and concurrent-output tests.
+- Add repeatable benchmark runner with wall-clock timings, input/output bytes, runtime metadata and before/after RSS observations.
+- Run benchmark smoke test in CI alongside Node 20/22 tests.
+- Document benchmark limitations and the need for independent real-world visual comparisons.
+
+**Caution:** no production fidelity, memory-peak or cross-machine performance guarantee is claimed.
+
 ## 0.3.0-alpha.1
 
 - Introduce `core.optimize(input, options)` for bounded codec/quality candidate search.
