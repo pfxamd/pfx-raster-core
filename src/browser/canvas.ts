@@ -96,13 +96,19 @@ export async function probeBrowserRasterCapabilities(): Promise<BrowserRasterCap
   const offscreenCanvas = typeof OffscreenCanvas !== 'undefined';
   const { canvas } = makeCanvas(2, 2);
   const encoding: RasterFormat[] = [];
+  const decoding: RasterFormat[] = [];
   for (const format of ['png', 'jpeg', 'webp'] as const) {
     try {
-      await encodeCanvas(canvas, format, 85);
+      const sample = await encodeCanvas(canvas, format, 85);
       encoding.push(format);
-    } catch { /* Unsupported codec. */ }
+      try {
+        const bitmap = await decodeBitmap(sample, format);
+        bitmap.close();
+        decoding.push(format);
+      } catch { /* Codec can encode but cannot successfully decode the sample. */ }
+    } catch { /* Unsupported encoder. */ }
   }
-  return { decoding: ['png', 'jpeg', 'webp'], encoding, offscreenCanvas,
+  return { decoding, encoding, offscreenCanvas,
     exactResamplingKernels: ['nearest'],
     preservesEmbeddedIccOnTransform: false,
     guaranteesLosslessWebpOrAvif: false };
