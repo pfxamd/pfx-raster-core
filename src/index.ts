@@ -8,7 +8,8 @@ export type {
   ProcessResult, RasterEngine, RasterFormat, ResizeRequest, ResizeKernel
 } from './core/types.js';
 
-export { compareRgbaBlockSsim } from './optimizer/metric.js';
+export { compareRgbaBlockSsim, evaluateRgbaQuality } from './optimizer/metric.js';
+export type { RasterQualityScores } from './optimizer/metric.js';
 export { optimizeRaster } from './optimizer/optimize.js';
 export type { QualityEvaluator, OptimizationCore } from './optimizer/optimize.js';
 export type { OptimizeRequest, OptimizeResult, OptimizationCandidate } from './optimizer/types.js';
