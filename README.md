@@ -2,7 +2,7 @@
 
 Independent, open-source raster processing core for safe, reusable image transformations.
 
-**Status:** `0.4.0-alpha.2` — experimental. The repository contains source code; no npm publication is implied.
+**Status:** `0.4.0-alpha.3` — experimental. The repository contains source code; no npm publication is implied.
 
 ## Scope
 
@@ -70,11 +70,12 @@ Default limits: 32 MiB input, 64 million decoded pixels, 64 MiB output. Outputs 
 
 ## Quality policy
 
-See [docs/quality-policy.md](docs/quality-policy.md) for alpha/ICC/orientation regression tests, kernel guidance, and limitations. The adaptive search, strict size budget and scoring model are described in [docs/optimization.md](docs/optimization.md).
+See [docs/quality-policy.md](docs/quality-policy.md) for alpha/ICC/orientation regression tests, kernel guidance, and limitations. The adaptive search, strict size budget and local-detail scoring model are described in [docs/optimization.md](docs/optimization.md).
 
 ## Quality and performance verification
 
 Run `npm run check` for automated fidelity, optimization and robustness regressions.
+Optimization now requires **both** global sampled similarity and salient local-detail similarity to meet the configured `minScore`. Scores differ from alpha.2; they are still only heuristics.
 Run `npm run benchmark` for repeatable synthetic image timing/size comparisons;
 use `npm run benchmark -- --iterations=5 --json` for structured results.
 Benchmark samples are synthetic and are not a substitute for licensed real-world

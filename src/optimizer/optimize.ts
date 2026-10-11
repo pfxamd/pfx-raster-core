@@ -158,5 +158,5 @@ export async function optimizeRaster(
       'No encoding satisfies both maxOutputBytes and minScore at the requested dimensions');
   }
   return { ...best, score: bestScore, referenceBytes: reference.data.byteLength,
-    candidates: comparisons, metric: 'sampled-rgb-alpha-block-ssim-v1' };
+    candidates: comparisons, metric: 'sampled-rgb-alpha-block-ssim-v2-local-detail' };
 }

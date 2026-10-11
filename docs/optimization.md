@@ -9,8 +9,14 @@
 3. Keep an unchanged source when it already fits requested resize bounds and no profile conversion is required; preserve its exact encoded bytes when selected.
 4. Optionally require an encoded size budget (`maxOutputBytes`, in bytes or `'input'` for the original encoded size). Disqualify over-budget candidates before the expensive quality comparison.
 5. Encode each permitted format/quality combination. JPEG is automatically skipped for transparent inputs. Candidates that cannot beat the current valid result are rejected without scoring.
-6. Convert the reference and eligible candidates to sRGB for comparison (without changing encoded ICC metadata). Compare equal-dimension RGBA samples. Compute 8x8 block SSIM separately for each RGB channel composited on black and white, plus the raw alpha channel. Report the **minimum mean channel score** to detect color/alpha differences that luminance-only SSIM misses.
+6. Convert the reference and eligible candidates to sRGB for comparison (without changing encoded ICC metadata). Compare equal-dimension RGBA samples. Compute 8x8 block SSIM separately for each RGB channel composited on black and white, plus the raw alpha channel. Report two scores: the **minimum mean channel score** across all blocks, and a **local detail score** (5th-percentile of weakest-channel SSIM on contrast-bearing 8x8 reference blocks). The final score is their minimum: both must meet `minScore`.
 7. Accept a candidate only when its score is at least `minScore` **and** it is smaller than the best passing result. Without a strict size budget, fall back to the lossless reference or unchanged original. **With a budget, if no valid result meets both constraints, throw `RasterError('OUTPUT_TOO_LARGE')`; never silently weaken quality.**
+
+## Metric revision: v2 local detail
+
+The v2 quality gate uses 8x8 reference blocks with at least 32 pixels and reference RGB/alpha channel variance >= 100. Where at least 20 such blocks exist, the 5th-percentile of their lowest-channel similarity is a second mandatory quality threshold. Otherwise the detail check falls back to the global score. All scores are clipped to the 0..1 range. The original `compareRgbaBlockSsim()` helper retains its global-only v1 output; `evaluateRgbaQuality()` exposes the score breakdown. `OptimizeResult.metric` now reports `sampled-rgb-alpha-block-ssim-v2-local-detail`.
+
+**Compatibility:** quality scores are stricter and not directly comparable to alpha.2. Existing `minScore` settings may reject previously accepted encodings. The new threshold does not certify legibility of tiny characters; resampling and block percentiles can still miss small changes, especially after downsampling to `maxEvaluationPixels`. Real-photo validation performed during development was not added as a repository fixture and is not a substitute for licensed reproducible samples.
 
 ## Defaults
 
