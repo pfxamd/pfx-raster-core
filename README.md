@@ -2,7 +2,7 @@
 
 Independent, open-source raster processing core for safe, reusable image transformations.
 
-**Status:** `0.5.0-alpha.2` — experimental. The repository contains source code; no npm publication is implied.
+**Status:** `0.5.0-alpha.3` — experimental. The repository contains source code; no npm publication is implied.
 
 ## Scope
 
@@ -25,7 +25,7 @@ npm install
 npm run check
 ```
 
-Node.js 20+ is required for the Node adapter (Sharp/libvips). A separate browser entry now uses Canvas/OffscreenCanvas and shares validation, optimization and processing policies. Browsers do not need Sharp at runtime.
+Node.js 20+ is required for the Node adapter (Sharp/libvips). A separate browser entry now uses Canvas/OffscreenCanvas and shares validation, optimization and processing policies. Browsers do not need Sharp at runtime. The browser entry also exports `resizeToRgba()` so downstream image encoders can work directly on pixels without temporary PNG files.
 
 ## Example
 
