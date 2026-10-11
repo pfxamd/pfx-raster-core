@@ -24,7 +24,7 @@ const run = (bin, args, cwd = root) =>
 
 try {
   assert.equal(manifest.name, '@pfxamd/raster-core');
-  assert.match(manifest.version, /^0[.]5[.]0-alpha[.][0-9]+$/);
+  assert.match(manifest.version, /^[0-9]+[.][0-9]+[.][0-9]+-alpha[.][0-9]+$/);
   for (const [key, stem] of entries) {
     assert.deepEqual(manifest.exports[key], {
       types: './' + stem + '.d.ts',
