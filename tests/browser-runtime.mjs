@@ -48,10 +48,10 @@ try {
     const original = new Uint8Array(await originalBlob.arrayBuffer());
     const info = await core.inspect(original);
     const unchanged = await core.process(original);
-    const webp = await core.process(original, { resize: { width: 80 }, format: 'webp' });
+    const webp = await core.process(original, { resize: { width: 80 }, format: 'webp', colorProfile: 'srgb' });
     const optimization = await core.optimize(original, {
       resize: { width: 80 }, formats: ['webp', 'jpeg'], qualities: [72, 90],
-      maxOutputBytes: 'input', minScore: 0.4
+      maxOutputBytes: 'input', minScore: 0.4, colorProfile: 'srgb'
     });
     let kernelError = '';
     try {
@@ -68,7 +68,7 @@ try {
     alphaCtx.fillStyle = 'rgba(220, 30, 80, 0.45)';
     alphaCtx.fillRect(0, 0, 8, 16);
     const alphaBytes = new Uint8Array(await (await make(transparent, 'image/png')).arrayBuffer());
-    const alphaOutput = await core.process(alphaBytes, { format: 'webp', quality: 90 });
+    const alphaOutput = await core.process(alphaBytes, { format: 'webp', quality: 90, colorProfile: 'srgb' });
     const caps = await mod.probeBrowserRasterCapabilities();
     return {
       input: { format: info.format, width: info.width, height: info.height, hasAlpha: info.hasAlpha },
