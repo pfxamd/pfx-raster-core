@@ -2,7 +2,7 @@
 
 Independent, open-source raster processing core for safe, reusable image transformations.
 
-**Status:** `0.6.0-alpha.2` — experimental. Versioned standalone distribution is provided through automated GitHub Releases, without a registry account.
+**Status:** `0.6.0-alpha.3` — experimental. Versioned standalone distribution is provided through automated GitHub Releases, without a registry account.
 
 ## Scope
 
