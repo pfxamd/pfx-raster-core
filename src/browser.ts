@@ -1,7 +1,9 @@
 import { BaseRasterCore } from './core/base-core.js';
-import { RasterError } from './core/errors.js';
 import { BrowserEngine } from './browser/browser-engine.js';
 import { BrowserQualityEvaluator } from './browser/quality-evaluator.js';
+import { optimizeRasterWithEvaluator } from './optimizer/search.js';
+import type { OptimizationCore, QualityEvaluator } from './optimizer/search.js';
+import type { OptimizeRequest, OptimizeResult } from './optimizer/types.js';
 
 import type { CoreLimits, RasterEngine } from './core/types.js';
 import type { QualityEvaluator } from './optimizer/search.js';
@@ -25,6 +27,14 @@ export class RasterCore extends BaseRasterCore {
 
 export function createRasterCore(options: BrowserRasterCoreOptions = {}): RasterCore {
   return new RasterCore(options);
+}
+
+/** Browser equivalent of the Node optimizer function, with injectable evaluator. */
+export function optimizeRaster(
+  core: OptimizationCore, input: Uint8Array, request: OptimizeRequest = {},
+  evaluator: QualityEvaluator = new BrowserQualityEvaluator()
+): Promise<OptimizeResult> {
+  return optimizeRasterWithEvaluator(core, input, request, evaluator);
 }
 
 export { BrowserEngine } from './browser/browser-engine.js';
