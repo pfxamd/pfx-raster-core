@@ -68,7 +68,7 @@ test('optimizer generates bounded candidates and preserves input bytes', async (
   assert.equal(result.candidates.length, 5);
   assert.ok(result.score >= 0.9);
   assert.ok(result.data.byteLength <= result.referenceBytes);
-  assert.equal(result.metric, 'sampled-rgb-alpha-block-ssim-v1');
+  assert.equal(result.metric, 'sampled-rgb-alpha-block-ssim-v2-local-detail');
   assert.deepEqual(source, sourceCopy);
 });
 
