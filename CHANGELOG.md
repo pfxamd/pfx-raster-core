@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.0-alpha.5
+
+- Optional in-worker callback for bitmap decode, pixel extraction and Lanczos3 filtering timings from the actual raw resize path.
+- No behavior, filtering, codec or data transfer changes when instrumentation is omitted.
+
+
 ## 0.5.0-alpha.4
 
 - Speed up browser Lanczos3 resampling using packed typed filter taps and remove the second Float32 RGBA output buffer.
