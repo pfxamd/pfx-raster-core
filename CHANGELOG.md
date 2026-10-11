@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.0-alpha.8
+
+- Document the current Node, browser and header-only public API and alpha compatibility rules.
+- Add an isolated installed-tarball runtime and TypeScript contract smoke test to CI.
+- Prepare opt-in version-tagged npm alpha publishing through trusted GitHub OIDC credentials; a tag and an npm publisher configuration are required to publish.
+- Keep image processing behavior, browser UI, and downstream Git pins unchanged.
+
 ## 0.5.0-alpha.7
 
 - Add `@pfxamd/raster-core/browser/header`: synchronous bounded encoded-header

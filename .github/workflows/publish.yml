@@ -1,0 +1,38 @@
+name: Publish alpha package
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+      - name: Require tag to match package version
+        shell: bash
+        run: |
+          expected="v$(node -p "require('./package.json').version")"
+          test "$GITHUB_REF_NAME" = "$expected"
+          node -e "const p=require('./package.json'); if (!/^0[.]5[.]0-alpha[.][0-9]+$/.test(p.version)) process.exit(1)"
+      - name: Require trusted-publisher-compatible npm
+        run: npm install --global npm@^11.15.0
+      - name: Install
+        run: npm install --no-audit --no-fund
+      - name: Verify core and browser bundle
+        run: npm run check
+      - name: Verify isolated package consumer
+        run: npm run check:package
+      - name: Verify Chromium integration
+        run: npm run check:browser:runtime
+      - name: Publish prerelease through npm trusted publishing
+        run: npm publish --access public --tag alpha
