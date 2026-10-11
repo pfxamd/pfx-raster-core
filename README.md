@@ -2,7 +2,7 @@
 
 Independent, open-source raster processing core for safe, reusable image transformations.
 
-**Status:** `0.5.0-alpha.8` — experimental. Versioned standalone distribution is provided through automated GitHub Releases, without a registry account.
+**Status:** `0.6.0-alpha.1` — experimental. Versioned standalone distribution is provided through automated GitHub Releases, without a registry account.
 
 ## Scope
 
@@ -127,6 +127,8 @@ Default limits: 32 MiB input, 64 million decoded pixels, 64 MiB output. Outputs 
 ## Quality policy
 
 See [docs/quality-policy.md](docs/quality-policy.md) for alpha/ICC/orientation regression tests, kernel guidance, and limitations. The adaptive search, strict size budget and local-detail scoring model are described in [docs/optimization.md](docs/optimization.md).
+
+The current regression coverage and explicitly unmeasured risks are documented in [Test coverage and limits](docs/test-coverage.md).
 
 ## Quality and performance verification
 

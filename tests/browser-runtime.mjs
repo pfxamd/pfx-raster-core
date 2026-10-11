@@ -9,8 +9,12 @@ const chrome = [process.env.CHROME_PATH, '/usr/bin/google-chrome', '/usr/bin/chr
 if (!chrome) throw new Error('No Chrome/Chromium available for real-browser smoke test');
 
 const bundle = readFileSync(new URL('../dist/browser-bundle.mjs', import.meta.url));
+const headerBundle = readFileSync(new URL('../dist/header-only-bundle.mjs', import.meta.url));
 const server = createServer((req, res) => {
-  if (req.url === '/browser-bundle.mjs') {
+  if (req.url === '/header-only-bundle.mjs') {
+    res.writeHead(200, { 'Content-Type': 'text/javascript; charset=utf-8' });
+    res.end(headerBundle);
+  } else if (req.url === '/browser-bundle.mjs') {
     res.writeHead(200, { 'Content-Type': 'text/javascript; charset=utf-8' });
     res.end(bundle);
   } else {
@@ -120,6 +124,36 @@ try {
   assert.equal(outcome.avifError, 'UNSUPPORTED_FORMAT');
   assert.equal(outcome.alpha, true);
   assert.ok(outcome.encoders.includes('png') && outcome.encoders.includes('webp'));
+  const headerOnly = await page.evaluate(async () => {
+    const { inspectRasterHeader } = await import('/header-only-bundle.mjs');
+    const bytes = new Uint8Array(26);
+    bytes.set([82,73,70,70], 0);
+    const view = new DataView(bytes.buffer);
+    view.setUint32(4, bytes.length - 8, true);
+    bytes.set([87,69,66,80,86,80,56,76], 8);
+    view.setUint32(16, 5, true);
+    bytes[20] = 0x2f;
+    const dimensionBits = ((6000-1) & 0x3fff) | (((4000-1) & 0x3fff) << 14);
+    view.setUint32(21, dimensionBits >>> 0, true);
+    let decoderCalls = 0;
+    const originalDecoder = window.createImageBitmap;
+    window.createImageBitmap = (...args) => {
+      decoderCalls++;
+      return originalDecoder(...args);
+    };
+    try {
+      const info = inspectRasterHeader(bytes, { maxInputBytes: bytes.byteLength,
+        maxPixels: 24_000_000 });
+      return { width: info.width, height: info.height, format: info.format,
+        decoderCalls };
+    } finally {
+      window.createImageBitmap = originalDecoder;
+    }
+  });
+  assert.deepEqual(headerOnly, {
+    width: 6000, height: 4000, format: 'webp', decoderCalls: 0
+  });
+  process.stdout.write('PASS header-only Chromium no-decode: ' + JSON.stringify(headerOnly) + '\\n');
   assert.deepEqual(errors, []);
   process.stdout.write('PASS browser smoke: ' + JSON.stringify(outcome) + '\n');
 } finally {
