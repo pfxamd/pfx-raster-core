@@ -6,7 +6,6 @@ import type { OptimizationCore, QualityEvaluator } from './optimizer/search.js';
 import type { OptimizeRequest, OptimizeResult } from './optimizer/types.js';
 
 import type { CoreLimits, RasterEngine } from './core/types.js';
-import type { QualityEvaluator } from './optimizer/search.js';
 
 export interface BrowserRasterCoreOptions {
   readonly engine?: RasterEngine;
