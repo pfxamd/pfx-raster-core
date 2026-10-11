@@ -2,7 +2,7 @@
 
 Independent, open-source raster processing core for safe, reusable image transformations.
 
-**Status:** `0.5.0-alpha.6` — experimental. The repository contains source code; no npm publication is implied.
+**Status:** `0.5.0-alpha.7` — experimental. The repository contains source code; no npm publication is implied.
 
 ## Scope
 
@@ -70,6 +70,25 @@ Local Chromium benchmarks on one privately supplied photo and synthetic
 6MP opaque/alpha images showed improvements, but speeds depend on browser
 and hardware. The private source photograph is **not** committed.
 The API, ICC conversion rules, Lanczos3 filter and memory budget are unchanged.
+
+## Low-allocation encoded-header check (0.5.0-alpha.7)
+
+For metadata viewers and lightweight inspection tools, the dedicated
+`@pfxamd/raster-core/browser/header` entry exports `inspectRasterHeader`.
+It checks JPEG/PNG/WebP structure and dimension/input limits without decoding
+raster pixels or copying the caller's input byte array:
+
+```ts
+import { inspectRasterHeader } from '@pfxamd/raster-core/browser/header';
+const bytes = new Uint8Array(await file.arrayBuffer());
+const info = inspectRasterHeader(bytes, { maxInputBytes: 8 * 1024 * 1024 });
+console.log(info.width, info.height, info.hasAlpha, info.hasIccProfile);
+```
+
+This is a **structural-header interpretation only**, not a guarantee of
+complete image decodability, CRC correctness or authenticity. For pixel stream
+verification use the existing asynchronous `createRasterCore().inspect()`.
+This subpath has no Canvas, codec, Sharp or other heavy runtime imports.
 
 ## Browser entry (alpha 0.5)
 

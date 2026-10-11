@@ -1,6 +1,6 @@
 {
   "name": "@pfxamd/raster-core",
-  "version": "0.5.0-alpha.6",
+  "version": "0.5.0-alpha.7",
   "description": "Independent, reusable raster image processing core with safe transformations and validation.",
   "type": "module",
   "license": "Apache-2.0",
@@ -21,6 +21,10 @@
     "./browser": {
       "types": "./dist/src/browser.d.ts",
       "import": "./dist/src/browser.js"
+    },
+    "./browser/header": {
+      "types": "./dist/src/browser/header-only.d.ts",
+      "import": "./dist/src/browser/header-only.js"
     }
   },
   "types": "./dist/src/index.d.ts",
@@ -32,7 +36,7 @@
     "prepack": "npm run check",
     "benchmark": "npm run build && node dist/benchmarks/run.js",
     "benchmark:smoke": "npm run build && node dist/benchmarks/run.js --iterations=1 --smoke --json",
-    "check:browser": "npm run build && esbuild src/browser.ts --bundle --platform=browser --format=esm --target=es2022 --outfile=dist/browser-bundle.mjs --metafile=dist/browser-metafile.json && node tests/assert-browser-bundle.mjs",
+    "check:browser": "npm run build && esbuild src/browser.ts --bundle --platform=browser --format=esm --target=es2022 --outfile=dist/browser-bundle.mjs --metafile=dist/browser-metafile.json && esbuild src/browser/header-only.ts --bundle --platform=browser --format=esm --target=es2022 --outfile=dist/header-only-bundle.mjs --metafile=dist/header-only-metafile.json && node tests/assert-browser-bundle.mjs",
     "check:browser:runtime": "node tests/browser-runtime.mjs",
     "prepare": "npm run build",
     "benchmark:browser": "npm run check:browser && node tests/browser-performance.mjs"
