@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.0-alpha.7
+
+- Add `@pfxamd/raster-core/browser/header`: synchronous bounded encoded-header
+  inspection for still JPEG, PNG and WebP without decoding pixels, copying
+  input bytes or allocating an RGBA image. Reject invalid sizes and animation.
+- Structural header checks are **not** full image bitstream validation; callers
+  needing decoder verification must continue using `core.inspect()`.
+- No changes to resizing, codecs, quality policies or existing API behavior.
+
+
 ## 0.5.0-alpha.6
 
 - Accelerate browser Lanczos3 by storing precomputed source-byte strides in filter taps, eliminating repeated per-sample axis selection and address multiplication.
