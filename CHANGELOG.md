@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.5.0-alpha.6
+
+- Accelerate browser Lanczos3 by storing precomputed source-byte strides in filter taps, eliminating repeated per-sample axis selection and address multiplication.
+- Add a mathematically equivalent fully opaque first-pass optimization; semitransparent image math remains unchanged.
+- Preserve the exact old RGBA output bytes in five deterministic regression snapshots: opaque, partial alpha, late alpha, vertical-first and fine-line images.
+- Locally benchmark on the private real photograph and 6MP synthetic alpha/opaque images in Chromium; input photography is not committed.
+- Retain intermediate allocation bounds, cancellation isolation (caller worker), API shape, sRGB/ICC behavior and existing browser stage-timing hooks.
+
+**Benchmark caution:** speeds depend on browser and hardware; Chrome results do not imply the same improvement in Firefox on mobile.
+
+
 ## 0.5.0-alpha.5
 
 - Optional in-worker callback for bitmap decode, pixel extraction and Lanczos3 filtering timings from the actual raw resize path.
