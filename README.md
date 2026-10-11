@@ -2,7 +2,7 @@
 
 Independent, open-source raster processing core for safe, reusable image transformations.
 
-**Status:** `0.5.0-alpha.4` — experimental. The repository contains source code; no npm publication is implied.
+**Status:** `0.5.0-alpha.6` — experimental. The repository contains source code; no npm publication is implied.
 
 ## Scope
 
@@ -57,6 +57,19 @@ console.log(optimized.output.format, optimized.score, optimized.candidates);
 ```
 
 The package name above is a **planned package identifier**, not a claim of public npm availability. During development, import from a local checkout/workspace package.
+
+## Faster browser Lanczos3 (0.5.0-alpha.6)
+
+The resampler caches byte-strided tap addresses and skips redundant
+per-tap alpha work for fully opaque sources. Semi-transparent images retain
+the existing premultiplied-alpha math. Exact RGBA output bytes are checked
+against the previous implementation for opaque, partial-alpha, late-alpha,
+vertical-first, and fine-line regression fixtures.
+
+Local Chromium benchmarks on one privately supplied photo and synthetic
+6MP opaque/alpha images showed improvements, but speeds depend on browser
+and hardware. The private source photograph is **not** committed.
+The API, ICC conversion rules, Lanczos3 filter and memory budget are unchanged.
 
 ## Browser entry (alpha 0.5)
 
