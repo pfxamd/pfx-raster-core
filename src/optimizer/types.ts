@@ -7,6 +7,14 @@ export interface OptimizeRequest {
   readonly formats?: readonly RasterFormat[];
   /** Candidate lossy encoder quality values. */
   readonly qualities?: readonly number[];
+  /**
+   * Optional strict encoded output budget in bytes.
+   * 'input' means at most the original input byte count.
+   * If no candidate meets BOTH this budget and minScore, optimization throws
+   * RasterError('OUTPUT_TOO_LARGE'), never silently lowering quality.
+   * Without a budget, a high-fidelity resized output may exceed input bytes.
+   */
+  readonly maxOutputBytes?: number | 'input';
   /** Minimum measured, reference-relative block SSIM score (0..1). */
   readonly minScore?: number;
   /** ICC handling, matching core.process(). */
@@ -20,10 +28,10 @@ export interface OptimizationCandidate {
   /** Absent for lossless reference or original source. */
   readonly quality?: number;
   readonly bytes?: number;
-  /** Reference-relative sampled RGB/alpha block SSIM. */
+  /** Reference-relative sampled RGB/alpha block SSIM; absent if size alone rejected a candidate. */
   readonly score?: number;
   readonly accepted: boolean;
-  readonly reason?: 'reference' | 'original' | 'below-threshold' | 'not-smaller' | 'encode-failed';
+  readonly reason?: 'reference' | 'original' | 'below-threshold' | 'not-smaller' | 'over-budget' | 'encode-failed';
 }
 
 export interface OptimizeResult extends ProcessResult {

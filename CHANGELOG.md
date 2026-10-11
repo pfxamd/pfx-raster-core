@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.0-alpha.2
+
+- Add opt-in `maxOutputBytes: 'input' | number` to optimization, enforcing encoded-size constraints without weakening `minScore`.
+- Fail with `OUTPUT_TOO_LARGE` when no output satisfies both constraints, instead of silently returning a larger file.
+- Preserve original bytes when resize bounds already fit (no resizing needed).
+- Skip quality decoding for candidates that exceed size budget or cannot beat the smallest accepted output.
+- Probe quality 100 in the default candidate set; document scoring limitations and test budget failures.
+
+
 ## 0.4.0-alpha.1
 
 - Add synthetic fine-detail, gradient, chromatic and alpha regression tests.
