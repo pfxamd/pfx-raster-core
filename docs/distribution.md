@@ -1,44 +1,48 @@
 # Distribution and API contract
 
-Status: 0.5.0-alpha.8 is **pre-release**, and this repository does not claim that any npm version has been published.
+**Release:** `0.5.0-alpha.8` (experimental). The canonical distribution channel is **GitHub Releases**, not an npm registry. No external account or manual publish commands are required.
 
-## Public package imports
+## Supported imports
 
-| Entrypoint | Runtime | Public contract |
+| Import | Runtime | Contract |
 | --- | --- | --- |
-| @pfxamd/raster-core | Node >=20 with Sharp/libvips | createRasterCore, RasterCore, RasterError, SharpEngine, optimization helpers and shared types |
-| @pfxamd/raster-core/browser | Browser worker/DOM or OffscreenCanvas | createRasterCore, RasterCore, BrowserEngine, pixel/resample functions and browser types |
-| @pfxamd/raster-core/browser/header | Browser or Node without pixel decoder | inspectRasterHeader(input: Uint8Array, limits?: Partial<CoreLimits>): ImageInfo |
+| `@pfxamd/raster-core` | Node >=20 (Sharp/libvips) | `createRasterCore`, `RasterCore`, `RasterError`, `SharpEngine`, optimization helpers and shared types |
+| `@pfxamd/raster-core/browser` | Browser Worker / Canvas or OffscreenCanvas | `createRasterCore`, `RasterCore`, `BrowserEngine`, pixel processing and resampling exports |
+| `@pfxamd/raster-core/browser/header` | Browser or Node without a raster decoder | `inspectRasterHeader(input: Uint8Array, limits?: Partial<CoreLimits>): ImageInfo` |
 
-The root import is NOT browser-safe. The browser and browser/header bundles must not contain Sharp or Node built-ins. The header import checks structural fields and limits only; it does not decode pixels or prove full file integrity.
+The root entrypoint depends on Node/Sharp. Browser bundles must remain free of Sharp and Node built-ins. The structural-header API **does not decode or authenticate image pixels**. Internal `src/`, `dist/`, `tests/` modules are not public API paths.
 
-The public types are the named exports from the three subpaths. Other paths under dist/, src/, tests/ and internal implementation modules are not part of the contract.
+## Versioning and compatibility
 
-## Alpha compatibility policy
+- The `package.json` version is the release identifier. A successful `CI` push to `main` automatically generates `v<version>` and attaches a tested compiled archive if that version has not already been released.
+- A release tag and attached archive are immutable version references. Later code changes with the same version do **not** overwrite an existing release. Bump the version to distribute new code.
+- Exact prerelease versions must be tested in consumers before migration. Compatibility in alpha is a goal but not an unconditional SemVer guarantee.
+- Preserve external exports, input and result contracts, error codes, original-byte ownership, input/output limits, ICC explicit conversion consent, and alpha/orientation semantics.
+- Node and browser implementations may produce different bytes and do not promise cross-engine encoding parity.
 
-- Patch changes within the same alpha series should retain declared public exports, argument types and result shapes unless an intentional versioned breaking change is documented.
-- Until 1.0, backwards compatibility is an engineering goal, not a blanket SemVer guarantee. Consumers should pin an **exact** pre-release package version and upgrade only after their tests pass.
-- Do not silently weaken limits, input byte ownership, orientation rules, explicit ICC conversion consent, alpha handling, or public error codes.
-- Node and browser codecs/resamplers are different and cannot promise identical encoded bytes.
+## Automated release pipeline
 
-## Verify a distributable
+The `.github/workflows/release.yml` workflow listens for a **successful push-to-main CI** run. It checks that the tested commit is still current, skips a version that already has a release, builds and tests the package again, tests the real installed tarball and browser runtime, and publishes `pfxamd-raster-core-<version>.tgz` plus a `.sha256` checksum as GitHub Release assets. This is a distribution of compiled files, not a Git source snapshot. A failed check blocks publishing. No npm registry credentials are used.
 
-After npm install in a clean checkout:
+Release asset URL pattern:
 
-1. Run npm run check (unit, quality and browser bundle checks).
-2. Run npm run check:package (pack, install the real archive in an isolated consumer, import every public entrypoint and compile a separate TypeScript consumer).
-3. Run npm run check:browser:runtime for a real Chromium smoke test.
+```text
+https://github.com/pfxamd/pfx-raster-core/releases/download/v0.5.0-alpha.8/pfxamd-raster-core-0.5.0-alpha.8.tgz
+```
 
-No private images are used. CI runs the packaged-consumer test for Node 22 in addition to its existing tests. These checks validate the build artifact, not npm registry availability.
+Use that exact URL (or the newer version's exact URL) as a package-manager dependency for browser/Node consumers. It retains imports under the same `@pfxamd/raster-core` package name while eliminating raw commit-SHA dependencies. Verify the asset's availability and integration tests **before** changing each dependent application. The release archive is publicly available without npm login; internet access to GitHub is still required for a fresh installation.
 
-## Publishing gate
+## Package validation
 
-The publish.yml workflow only runs after someone pushes a matching v-prefixed release tag (for example v0.5.0-alpha.9). It verifies tag = package.json version, executes checks, verifies the packed consumer, and publishes with the npm dist-tag alpha rather than latest. Node 24 and npm >=11.15 are used for GitHub OIDC trusted publishing without stored npm publish tokens.
+```bash
+npm install
+npm run check
+npm run check:package
+npm run check:browser:runtime
+```
 
-The npm package must first exist under the intended @pfxamd scope with authorized ownership. Run `node scripts/check-registry.mjs` to inspect public registry state; HTTP 404 establishes that the package is not publicly resolvable, not that a specific account owns the scope. For a first publication this normally requires a one-time authenticated npm bootstrap.
+The package smoke test builds a tarball, installs it in an isolated directory, imports all three entrypoints and typechecks an external consumer. CI also runs Node 20 and 22 tests, bundles and real-browser checks. Synthetic test fixtures are used; private imagery is never included.
 
-### One-time bootstrap (package not yet publicly present)
+## Rollout policy
 
-From a clean checkout of the tested `main` branch, sign in interactively with `npm login` and confirm the intended account using `npm whoami`. Build and verify the exact package with `npm run check && npm run check:package` and publish the pre-release using `npm publish --access public --tag alpha`. This action must be performed by the authorized npm scope owner; **never paste credentials or tokens into GitHub issues, ChatGPT, or committed files**. The initial publication is not performed by the GitHub OIDC workflow. Do not tag the manually published bootstrap version: pushing the matching tag would cause an unnecessary duplicate publish attempt. Configure the trusted publisher after the package exists, then bump to the next alpha version for the first automated tagged release. Configure a GitHub Actions trusted publisher on npmjs.com for user pfxamd, repository pfx-raster-core, and workflow filename publish.yml; authorize direct npm publish, not stage-only. Verify the package's repository linkage. **Do not push the release tag before this is configured.** The CI workflow cannot establish registry ownership or trusted-publisher settings by itself.
-
-After registry publication, verify the exact version and full import tests from the registry in both downstream applications on branches before replacing Git SHA pins. Keep existing pins until that evidence exists.
+Keep existing consumer pin until the versioned release file has been downloaded and its actual archive tested. Update Image Studio and Image Inspector separately, run their tests and deploy smoke checks. Do not change conversion algorithms or UI during a dependency migration.

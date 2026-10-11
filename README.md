@@ -2,7 +2,7 @@
 
 Independent, open-source raster processing core for safe, reusable image transformations.
 
-**Status:** `0.5.0-alpha.8` — experimental. The repository prepares an npm-distributable tarball; public npm publication is not implied.
+**Status:** `0.5.0-alpha.8` — experimental. Versioned standalone distribution is provided through automated GitHub Releases, without a registry account.
 
 ## Scope
 
@@ -16,9 +16,9 @@ Independent, open-source raster processing core for safe, reusable image transfo
 
 This is **not** an AI upscaler, denoiser, independently validated perceptual-quality optimizer, or image storage system. Those are separate possible future layers. It does not promise perceptual equivalence after lossy encoding.
 
-Git dependency installs now run a `prepare` step that compiles `dist/src` before packaging. This supports pinned GitHub consumption while npm publication remains separate.
+Git source installs remain supported; releases ship an already compiled, independently installable `.tgz` archive so consumers do not need to build Raster Core from source.
 
-The three supported package entrypoints are the Node root, browser adapter, and browser/header-only inspector. API contracts, packed-consumer verification, and the publication gate are described in [Distribution and API policy](docs/distribution.md). Do not switch downstream applications from their pinned Git revisions until an exact registry version is confirmed and tested.
+The three supported package entrypoints are the Node root, browser adapter, and browser/header-only inspector. Their API contracts and independent versioned distribution are documented in [Distribution and API policy](docs/distribution.md). Release archives are attached automatically after successful checks on `main`; consumers switch only after a published archive is verified.
 
 ## Install from source
 
@@ -58,7 +58,7 @@ const optimized = await core.optimize(input, {
 console.log(optimized.output.format, optimized.score, optimized.candidates);
 ```
 
-The package name above is a **planned package identifier**, not a claim of public npm availability. During development, import from a local checkout/workspace package.
+The package import name stays `@pfxamd/raster-core` even when installed directly from a GitHub Release archive. An npm registry publication or account is not required.
 
 ## Faster browser Lanczos3 (0.5.0-alpha.6)
 
@@ -140,7 +140,7 @@ photography, color or tiny-text validation. See [docs/benchmarks.md](docs/benchm
 
 ## Packaging verification
 
-Run `npm run check` followed by `npm run check:package` to build and test an actual npm tarball in an isolated consumer project. The package's Node/browser/header entrypoints and TypeScript declarations are verified independently of repository-relative source paths. This is not proof that the package is already published on npm.
+Run `npm run check` followed by `npm run check:package` to build and test the release tarball in an isolated consumer project. The Node/browser/header entrypoints and TypeScript declarations are tested independently of repository-relative source paths. Once the CI run succeeds on `main`, `.github/workflows/release.yml` automatically attaches this archive and its SHA-256 checksum to a GitHub Release named for the package version.
 
 ## Roadmap
 
