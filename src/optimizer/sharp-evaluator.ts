@@ -1,10 +1,11 @@
 import sharp from 'sharp';
 import { RasterError } from '../core/errors.js';
-import { compareRgbaBlockSsim } from './metric.js';
+import { evaluateRgbaQuality } from './metric.js';
 
 /**
- * Independent decoding adapter. All input profiles are converted to sRGB for
- * comparison; this does not change the encoded candidate bytes or ICC profile.
+ * Decode both outputs to matching sampled sRGB RGBA buffers, then enforce the
+ * weaker of the global and salient local-detail similarity checks.
+ * This changes optimization score semantics relative to alpha 0.4.0-alpha.2.
  */
 export class SharpQualityEvaluator {
   async compare(reference: Uint8Array, candidate: Uint8Array, maxPixels: number): Promise<number> {
@@ -31,6 +32,6 @@ export class SharpQualityEvaluator {
     if (other.width !== meta.width || other.height !== meta.height) {
       throw new RasterError('OUTPUT_INVALID', 'Candidate and reference dimensions differ');
     }
-    return compareRgbaBlockSsim(await decode(reference), await decode(candidate), width, height);
+    return evaluateRgbaQuality(await decode(reference), await decode(candidate), width, height).score;
   }
 }
