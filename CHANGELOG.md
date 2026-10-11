@@ -2,6 +2,9 @@
 
 ## 0.5.0-alpha.8
 
+- Distribute this pre-release as a versioned, prebuilt GitHub Release archive with SHA-256 checksum after passing `main` branch CI; no npm account or registry publication is involved.
+- Consumers can install from an immutable version-specific release asset URL without pinning a Git commit SHA.
+
 - Document the current Node, browser and header-only public API and alpha compatibility rules.
 - Add an isolated installed-tarball runtime and TypeScript contract smoke test to CI.
 - Prepare opt-in version-tagged npm alpha publishing through trusted GitHub OIDC credentials; a tag and an npm publisher configuration are required to publish.
