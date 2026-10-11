@@ -120,7 +120,8 @@ export async function optimizeRasterWithEvaluator(
         });
       } catch (error) {
         if (error instanceof RasterError &&
-            (error.code === 'PROCESSING_FAILED' || error.code === 'OUTPUT_TOO_LARGE')) {
+            (error.code === 'PROCESSING_FAILED' || error.code === 'OUTPUT_TOO_LARGE' ||
+             error.code === 'UNSUPPORTED_FORMAT')) {
           comparisons.push({ format, quality, accepted: false, reason: 'encode-failed' });
           continue;
         }
