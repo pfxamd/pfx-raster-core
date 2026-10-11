@@ -19,4 +19,7 @@ jobs:
       - run: npm install --no-audit --no-fund
       - run: npm run check
       - run: npm run benchmark:smoke
+      - name: Record synthetic benchmarks (not a performance gate)
+        if: matrix.node-version == 22
+        run: npm run benchmark -- --iterations=3 --json
       - run: npm pack --dry-run
