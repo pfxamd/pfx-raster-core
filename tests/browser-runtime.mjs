@@ -48,7 +48,19 @@ try {
     const original = new Uint8Array(await originalBlob.arrayBuffer());
     const info = await core.inspect(original);
     const unchanged = await core.process(original);
+    let preserveIccError = '';
+    if (info.hasIccProfile) {
+      try { await core.process(original, { format: 'webp' }); }
+      catch (error) { preserveIccError = error.code; }
+    }
     const webp = await core.process(original, { resize: { width: 80 }, format: 'webp', colorProfile: 'srgb' });
+    const nearest = await core.process(original, {
+      resize: { width: 80, kernel: 'nearest' }, format: 'png', colorProfile: 'srgb'
+    });
+    let losslessError = '';
+    try {
+      await core.process(original, { format: 'webp', lossless: true, colorProfile: 'srgb' });
+    } catch (error) { losslessError = error.code; }
     const optimization = await core.optimize(original, {
       resize: { width: 80 }, formats: ['webp', 'jpeg'], qualities: [72, 90],
       maxOutputBytes: 'input', minScore: 0.4, colorProfile: 'srgb'
@@ -69,25 +81,37 @@ try {
     alphaCtx.fillRect(0, 0, 8, 16);
     const alphaBytes = new Uint8Array(await (await make(transparent, 'image/png')).arrayBuffer());
     const alphaOutput = await core.process(alphaBytes, { format: 'webp', quality: 90, colorProfile: 'srgb' });
+    let flattenError = '';
+    try { await core.process(alphaBytes, { format: 'jpeg' }); }
+    catch (error) { flattenError = error.code; }
     const caps = await mod.probeBrowserRasterCapabilities();
     return {
-      input: { format: info.format, width: info.width, height: info.height, hasAlpha: info.hasAlpha },
+      input: { format: info.format, width: info.width, height: info.height,
+        hasAlpha: info.hasAlpha, hasIccProfile: info.hasIccProfile },
       passthrough: unchanged.passthrough &&
         unchanged.data.length === original.length &&
         unchanged.data.every((v, i) => v === original[i]),
       resized: { format: webp.output.format, width: webp.output.width, height: webp.output.height },
       optimizer: { score: optimization.score, bytes: optimization.data.byteLength,
         inputBytes: original.byteLength, format: optimization.output.format },
-      kernelError, avifError, alpha: alphaOutput.output.hasAlpha,
+      kernelError, avifError, preserveIccError, losslessError,
+      nearestWidth: nearest.output.width, flattenError, alpha: alphaOutput.output.hasAlpha,
       encoders: caps.encoding
     };
   });
-  assert.deepEqual(outcome.input, { format: 'jpeg', width: 160, height: 100, hasAlpha: false });
+  assert.equal(outcome.input.format, 'jpeg');
+  assert.equal(outcome.input.width, 160);
+  assert.equal(outcome.input.height, 100);
+  assert.equal(outcome.input.hasAlpha, false);
+  if (outcome.input.hasIccProfile) assert.equal(outcome.preserveIccError, 'UNSUPPORTED_FORMAT');
   assert.equal(outcome.passthrough, true);
   assert.deepEqual(outcome.resized, { format: 'webp', width: 80, height: 50 });
   assert.ok(outcome.optimizer.bytes <= outcome.optimizer.inputBytes);
   assert.ok(outcome.optimizer.score >= 0.4);
   assert.equal(outcome.kernelError, 'INVALID_REQUEST');
+  assert.equal(outcome.losslessError, 'UNSUPPORTED_FORMAT');
+  assert.equal(outcome.nearestWidth, 80);
+  assert.equal(outcome.flattenError, 'INVALID_REQUEST');
   assert.equal(outcome.avifError, 'UNSUPPORTED_FORMAT');
   assert.equal(outcome.alpha, true);
   assert.ok(outcome.encoders.includes('png') && outcome.encoders.includes('webp'));
