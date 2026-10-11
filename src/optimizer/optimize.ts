@@ -15,7 +15,7 @@ export interface QualityEvaluator {
 }
 
 const DEFAULT_FORMATS: readonly RasterFormat[] = ['webp', 'avif', 'jpeg'];
-const DEFAULT_QUALITIES: readonly number[] = [72, 84, 94];
+const DEFAULT_QUALITIES: readonly number[] = [72, 84, 94, 100];
 const MAX_CANDIDATES = 16;
 const DEFAULT_EVALUATION_PIXELS = 262_144;
 
@@ -40,6 +40,11 @@ function validatedOptions(request: OptimizeRequest): Required<Pick<OptimizeReque
   }
   if (formats.length * qualities.length > MAX_CANDIDATES) {
     throw new RasterError('INVALID_REQUEST', 'Too many candidates; maximum formats * qualities is 16');
+  }
+  const budget = request.maxOutputBytes;
+  if (budget !== undefined && budget !== 'input' &&
+      (!Number.isSafeInteger(budget) || budget <= 0)) {
+    throw new RasterError('INVALID_REQUEST', 'maxOutputBytes must be a positive safe integer or input');
   }
   const minScore = request.minScore ?? 0.985;
   if (typeof minScore !== 'number' || !Number.isFinite(minScore) || minScore < 0 || minScore > 1) {
@@ -66,22 +71,39 @@ export async function optimizeRaster(
   const snapshot = copyAndCheckInput(input, core.limits);
   const transform = { ...(request.resize ? { resize: request.resize } : {}), colorProfile: opts.colorProfile };
   const reference = await core.process(snapshot, { ...transform, format: 'png' });
+  // The budget is strictly opt-in. A resized lossless image can legitimately
+  // have more encoded bytes than the original compressed source.
+  const budgetBytes = request.maxOutputBytes === 'input'
+    ? snapshot.byteLength : request.maxOutputBytes;
+  const withinBudget = (bytes: number) => budgetBytes === undefined || bytes <= budgetBytes;
+  const referenceAllowed = withinBudget(reference.data.byteLength);
   const comparisons: OptimizationCandidate[] = [
-    { format: 'png', bytes: reference.data.byteLength, score: 1, accepted: true, reason: 'reference' }
+    { format: 'png', bytes: reference.data.byteLength, score: 1,
+      accepted: referenceAllowed,
+      reason: referenceAllowed ? 'reference' : 'over-budget' }
   ];
-  let best = reference;
+  let best: ProcessResult | undefined = referenceAllowed ? reference : undefined;
   let bestScore = 1;
 
-  // If there was no downscaling or profile conversion, a source image is
-  // already visually identical to its own decoded reference. Keep it when
-  // smaller than a new PNG instead of re-encoding for no reason.
-  if (!request.resize && opts.colorProfile === 'preserve') {
+  // A resize request that does not actually downscale still permits an exact,
+  // byte-identical source. Check the original oriented dimensions explicitly;
+  // otherwise a request for smaller bounds must never return oversized input.
+  if (opts.colorProfile === 'preserve') {
     const original = await core.process(snapshot);
-    comparisons.push({
-      format: original.output.format, bytes: original.data.byteLength,
-      score: 1, accepted: true, reason: 'original'
-    });
-    if (original.data.byteLength <= best.data.byteLength) best = original;
+    const bounds = request.resize;
+    const fitsBounds = !bounds ||
+      ((bounds.width === undefined || original.output.width <= bounds.width) &&
+       (bounds.height === undefined || original.output.height <= bounds.height));
+    if (fitsBounds) {
+      const allowed = withinBudget(original.data.byteLength);
+      const chosen = allowed && (!best || original.data.byteLength <= best.data.byteLength);
+      comparisons.push({
+        format: original.output.format, bytes: original.data.byteLength, score: 1,
+        accepted: chosen,
+        reason: !allowed ? 'over-budget' : chosen ? 'original' : 'not-smaller'
+      });
+      if (chosen) best = original;
+    }
   }
 
   const seen = new Set<string>();
@@ -105,9 +127,20 @@ export async function optimizeRaster(
         }
         throw error;
       }
+      // Size-only eliminations need no expensive decoding or scoring.
+      if (!withinBudget(candidate.data.byteLength)) {
+        comparisons.push({ format, quality, bytes: candidate.data.byteLength,
+          accepted: false, reason: 'over-budget' });
+        continue;
+      }
+      if (best && candidate.data.byteLength >= best.data.byteLength) {
+        comparisons.push({ format, quality, bytes: candidate.data.byteLength,
+          accepted: false, reason: 'not-smaller' });
+        continue;
+      }
       const score = await evaluator.compare(reference.data, candidate.data, opts.maxEvaluationPixels);
       const passed = score >= opts.minScore;
-      const smaller = candidate.data.byteLength < best.data.byteLength;
+      const smaller = !best || candidate.data.byteLength < best.data.byteLength;
       comparisons.push({
         format, quality, bytes: candidate.data.byteLength, score,
         accepted: passed && smaller,
@@ -120,6 +153,10 @@ export async function optimizeRaster(
     }
   }
 
+  if (!best) {
+    throw new RasterError('OUTPUT_TOO_LARGE',
+      'No encoding satisfies both maxOutputBytes and minScore at the requested dimensions');
+  }
   return { ...best, score: bestScore, referenceBytes: reference.data.byteLength,
     candidates: comparisons, metric: 'sampled-rgb-alpha-block-ssim-v1' };
 }
