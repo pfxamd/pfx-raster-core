@@ -66,7 +66,10 @@ try {
       maxOutputBytes: 'input', minScore: 0.4, colorProfile: 'srgb'
     });
     const explicitLanczos = await core.process(original, { resize: { width: 80, kernel: 'lanczos3' }, format: 'png', colorProfile: 'srgb' });
-    const raw = await mod.resizeToRgba(original, { resize: { width: 80 }, colorProfile: 'srgb' });
+    let timing = null;
+    const raw = await mod.resizeToRgba(original,
+      { resize: { width: 80 }, colorProfile: 'srgb' }, undefined,
+      stages => { timing = stages; });
     let avifError = '';
     try {
       await core.process(original, { format: 'avif' });
@@ -92,7 +95,7 @@ try {
       resized: { format: webp.output.format, width: webp.output.width, height: webp.output.height },
       optimizer: { score: optimization.score, bytes: optimization.data.byteLength,
         inputBytes: original.byteLength, format: optimization.output.format },
-      lanczosWidth: explicitLanczos.output.width, rawBytes: raw.data.length, avifError, preserveIccError, losslessError,
+      lanczosWidth: explicitLanczos.output.width, rawBytes: raw.data.length, timing, avifError, preserveIccError, losslessError,
       nearestWidth: nearest.output.width, flattenError, alpha: alphaOutput.output.hasAlpha,
       encoders: caps.encoding
     };
@@ -108,6 +111,9 @@ try {
   assert.ok(outcome.optimizer.score >= 0.4);
   assert.equal(outcome.lanczosWidth, 80);
   assert.equal(outcome.rawBytes, 80 * 50 * 4);
+  assert.ok(outcome.timing.bitmapDecodeMs >= 0);
+  assert.ok(outcome.timing.pixelExtractionMs >= 0);
+  assert.ok(outcome.timing.resampleMs > 0);
   assert.equal(outcome.losslessError, 'UNSUPPORTED_FORMAT');
   assert.equal(outcome.nearestWidth, 80);
   assert.equal(outcome.flattenError, 'INVALID_REQUEST');
