@@ -69,6 +69,7 @@ export async function optimizeRasterWithEvaluator(
   // Snapshot user bytes once, before any async work or candidate iteration.
   const snapshot = copyAndCheckInput(input, core.limits);
   const transform = { ...(request.resize ? { resize: request.resize } : {}), colorProfile: opts.colorProfile };
+  const inspectedOriginal = await core.process(snapshot);
   const reference = await core.process(snapshot, { ...transform, format: 'png' });
   // The budget is strictly opt-in. A resized lossless image can legitimately
   // have more encoded bytes than the original compressed source.
@@ -88,7 +89,7 @@ export async function optimizeRasterWithEvaluator(
   // byte-identical source. Check the original oriented dimensions explicitly;
   // otherwise a request for smaller bounds must never return oversized input.
   if (opts.colorProfile === 'preserve') {
-    const original = await core.process(snapshot);
+    const original = inspectedOriginal;
     const bounds = request.resize;
     const fitsBounds = !bounds ||
       ((bounds.width === undefined || original.output.width <= bounds.width) &&
@@ -108,7 +109,7 @@ export async function optimizeRasterWithEvaluator(
   const seen = new Set<string>();
   for (const format of opts.formats) {
     if (format === 'png') continue; // lossless reference already covers PNG
-    if (format === 'jpeg' && reference.output.hasAlpha) continue;
+    if (format === 'jpeg' && inspectedOriginal.output.hasAlpha) continue;
     for (const quality of opts.qualities) {
       const key = format + ':' + quality;
       if (seen.has(key)) continue;
