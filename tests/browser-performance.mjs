@@ -3,7 +3,7 @@
  * responsive during CPU-intensive Lanczos3 filtering.
  */
 import { createServer } from 'node:http';
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import { chromium } from 'playwright-core';
 
 const bundle = readFileSync(new URL('../dist/browser-bundle.mjs', import.meta.url));
@@ -44,11 +44,12 @@ let browser;
 try {
   const address = server.address();
   if (!address || typeof address === 'string') throw new Error('No server port');
-  browser = await chromium.launch({
-    headless: true,
-    ...(process.env.CHROME_PATH ? { executablePath: process.env.CHROME_PATH } : {}),
-    args: ['--no-sandbox']
-  });
+  const chrome = [process.env.CHROME_PATH, '/usr/bin/google-chrome', '/usr/bin/chromium',
+    '/usr/bin/chromium-browser', chromium.executablePath()]
+    .find(path => path && existsSync(path));
+  if (!chrome) throw new Error('Chrome/Chromium is not installed');
+  browser = await chromium.launch({ headless: true, executablePath: chrome,
+    args: ['--no-sandbox'] });
   const page = await browser.newPage();
   await page.goto('http://127.0.0.1:' + address.port + '/');
   const report = await page.evaluate(async () => {
