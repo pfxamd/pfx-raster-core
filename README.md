@@ -2,7 +2,7 @@
 
 Independent, open-source raster processing core for safe, reusable image transformations.
 
-**Status:** `0.4.0-alpha.1` — experimental. The repository contains source code; no npm publication is implied.
+**Status:** `0.4.0-alpha.2` — experimental. The repository contains source code; no npm publication is implied.
 
 ## Scope
 
@@ -48,6 +48,7 @@ console.log(metadata, result.output, result.passthrough);
 const optimized = await core.optimize(input, {
   resize: { width: 1200 },
   minScore: 0.985,
+  maxOutputBytes: 'input', // Optional strict limit: throw if quality and size cannot both be met
   formats: ['webp', 'avif', 'jpeg']
 });
 console.log(optimized.output.format, optimized.score, optimized.candidates);
@@ -69,7 +70,7 @@ Default limits: 32 MiB input, 64 million decoded pixels, 64 MiB output. Outputs 
 
 ## Quality policy
 
-See [docs/quality-policy.md](docs/quality-policy.md) for alpha/ICC/orientation regression tests, kernel guidance, and limitations. The adaptive search and scoring model are described in [docs/optimization.md](docs/optimization.md).
+See [docs/quality-policy.md](docs/quality-policy.md) for alpha/ICC/orientation regression tests, kernel guidance, and limitations. The adaptive search, strict size budget and scoring model are described in [docs/optimization.md](docs/optimization.md).
 
 ## Quality and performance verification
 
@@ -82,7 +83,7 @@ photography, color or tiny-text validation. See [docs/benchmarks.md](docs/benchm
 ## Roadmap
 
 - `0.2`: quality-focused resizing/color tests and explicit resampling kernels.
-- `0.3`: measured quality-versus-size optimization with bounded candidate comparison (current alpha).
+- `0.3`: measured quality-versus-size optimization with bounded candidate comparison.
 - `0.4`: synthetic performance benchmarks and extended quality/robustness regression coverage (current alpha).
 - Next: licensed real-world visual evaluation, independent quality checks and third-party adapter validation.
 
