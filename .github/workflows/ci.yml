@@ -22,6 +22,9 @@ jobs:
         if: matrix.node-version == 22
         run: npm run check:browser:runtime
       - run: npm run benchmark:smoke
+      - name: Observe browser worker performance and frame responsiveness
+        if: matrix.node-version == 22
+        run: npm run benchmark:browser
       - name: Record synthetic benchmarks (not a performance gate)
         if: matrix.node-version == 22
         run: npm run benchmark -- --iterations=3 --json
