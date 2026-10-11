@@ -38,3 +38,17 @@ photographic benchmarks**. Before claiming production-level fidelity, introduce
 licensed/consented real-world samples covering photos, small text, saturated
 color, low contrast gradients, transparency and color profiles, with controlled
 human inspection. A sampled SSIM score alone cannot certify those qualities.
+
+## Browser worker resampler benchmark (0.5.0-alpha.4)
+
+Run `npm run benchmark:browser` with a supported Chromium installation.
+Three seeded/deterministic synthetic RGBA inputs (1536x1153, 2400x1600,
+4000x3000) are resized inside a dedicated browser module worker. The script
+prints operation time, source/output pixel bytes, known Float32 intermediate
+allocation, and the removed second Float32 buffer size. It also checks that
+the window requestAnimationFrame callback continues while the worker operates.
+These **are not peak process memory measurements**; browser Canvas/native image
+buffers and runtime caches are outside the reported sizes.
+
+Compare repeated real photographs and devices before drawing performance
+conclusions. Emulated phone viewports are **not physical phone measurements**.

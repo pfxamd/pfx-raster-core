@@ -1,8 +1,8 @@
 import { RasterError } from '../core/errors.js';
 
-/** Pixel-space, antialiased Lanczos3 downscale. RGB is filtered in sRGB.
- * Alpha is premultiplied before filtering to prevent transparent edge halos.
- * This is not a colorimetric, linear-light or HDR resampler.
+/**
+ * 8-bit sRGB Lanczos3 downscale. Premultiply alpha for convolution to prevent
+ * transparent RGB halos. This is not linear-light colorimetric resampling.
  */
 export interface RawRaster {
   readonly width: number;
@@ -10,61 +10,100 @@ export interface RawRaster {
   readonly data: Uint8ClampedArray<ArrayBuffer>;
 }
 
-interface Tap { readonly offset: number; readonly weight: number; }
-const MAX_WORKING_PIXELS = 4_194_304; // At most 64 MiB per float RGBA intermediate.
+interface FilterTaps {
+  readonly offsets: Int32Array<ArrayBuffer>;
+  readonly weights: Float64Array<ArrayBuffer>;
+}
+
+const MAX_WORKING_PIXELS = 4_194_304; // 64 MiB intermediate Float32 RGBA budget.
 
 function sinc(value: number): number {
   return value === 0 ? 1 : Math.sin(Math.PI * value) / (Math.PI * value);
 }
-function taps(input: number, output: number): Tap[][] {
+
+function taps(input: number, output: number): FilterTaps[] {
   const ratio = input / output;
   const support = 3 * Math.max(1, ratio);
   const stretch = Math.max(1, ratio);
-  const all: Tap[][] = [];
+  const all: FilterTaps[] = [];
+
   for (let i = 0; i < output; i++) {
     const center = (i + 0.5) * ratio - 0.5;
-    const weights: Tap[] = [];
+    const weights: number[] = [];
+    const offsets: number[] = [];
     let total = 0;
-    const from = Math.max(0, Math.ceil(center - support));
-    const to = Math.min(input - 1, Math.floor(center + support));
-    for (let j = from; j <= to; j++) {
+
+    for (let j = Math.max(0, Math.ceil(center - support));
+      j <= Math.min(input - 1, Math.floor(center + support)); j++) {
       const distance = (j - center) / stretch;
       const weight = Math.abs(distance) < 3 ? sinc(distance) * sinc(distance / 3) : 0;
       if (weight === 0) continue;
-      weights.push({ offset: j, weight });
+      offsets.push(j);
+      weights.push(weight);
       total += weight;
     }
-    if (total === 0) throw new RasterError('PROCESSING_FAILED', 'Lanczos sampling produced no taps');
-    all.push(weights.map(tap => ({ offset: tap.offset, weight: tap.weight / total })));
+    if (total === 0) {
+      throw new RasterError('PROCESSING_FAILED', 'Lanczos sampling produced no taps');
+    }
+    all.push({
+      offsets: Int32Array.from(offsets),
+      weights: Float64Array.from(weights, value => value / total)
+    });
   }
   return all;
 }
+
+/**
+ * Only the first pass needs a Float32 RGBA intermediate. The second writes
+ * straight into final Uint8ClampedArray, removing an entire Float32 result
+ * buffer. Precomputed typed taps also reduce inner-loop allocation/access.
+ */
 function pass(
-  input: Uint8ClampedArray | Float32Array, sourceWidth: number, sourceHeight: number,
-  outputWidth: number, outputHeight: number, horizontal: boolean, premultiplied: boolean
-): Float32Array {
-  const output = new Float32Array(outputWidth * outputHeight * 4);
+  input: Uint8ClampedArray | Float32Array,
+  sourceWidth: number, sourceHeight: number,
+  outputWidth: number, outputHeight: number, horizontal: boolean,
+  premultiplied: boolean, final: boolean
+): Float32Array<ArrayBuffer> | Uint8ClampedArray<ArrayBuffer> {
+  const output: Float32Array<ArrayBuffer> | Uint8ClampedArray<ArrayBuffer> = final
+    ? new Uint8ClampedArray(outputWidth * outputHeight * 4)
+    : new Float32Array(outputWidth * outputHeight * 4);
   const kernels = taps(horizontal ? sourceWidth : sourceHeight,
     horizontal ? outputWidth : outputHeight);
+
   for (let y = 0; y < outputHeight; y++) {
     for (let x = 0; x < outputWidth; x++) {
-      const weights = kernels[horizontal ? x : y]!;
+      const kernel = kernels[horizontal ? x : y]!;
+      const { offsets, weights } = kernel;
       const dest = (y * outputWidth + x) * 4;
       let red = 0, green = 0, blue = 0, alpha = 0;
-      for (const { offset, weight } of weights) {
-        const src = ((horizontal ? y : offset) * sourceWidth +
-          (horizontal ? offset : x)) * 4;
-        const a = input[src + 3]!;
-        const aFactor = premultiplied ? 1 : a / 255;
-        red += input[src]! * aFactor * weight;
-        green += input[src + 1]! * aFactor * weight;
-        blue += input[src + 2]! * aFactor * weight;
+
+      for (let k = 0; k < weights.length; k++) {
+        const offset = ((horizontal ? y : offsets[k]!) * sourceWidth +
+          (horizontal ? offsets[k]! : x)) * 4;
+        const a = input[offset + 3]!;
+        const weight = weights[k]!;
+        const premultipliedWeight = premultiplied ? weight : weight * a / 255;
+        red += input[offset]! * premultipliedWeight;
+        green += input[offset + 1]! * premultipliedWeight;
+        blue += input[offset + 2]! * premultipliedWeight;
         alpha += a * weight;
       }
-      output[dest] = red;
-      output[dest + 1] = green;
-      output[dest + 2] = blue;
-      output[dest + 3] = alpha;
+
+      if (final) {
+        const a = Math.max(0, Math.min(255, alpha));
+        output[dest + 3] = a;
+        if (a > 0.000001) {
+          const factor = 255 / a;
+          output[dest] = red * factor;
+          output[dest + 1] = green * factor;
+          output[dest + 2] = blue * factor;
+        }
+      } else {
+        output[dest] = red;
+        output[dest + 1] = green;
+        output[dest + 2] = blue;
+        output[dest + 3] = alpha;
+      }
     }
   }
   return output;
@@ -74,11 +113,13 @@ export function resizeRgbaLanczos3(
   source: Uint8ClampedArray, width: number, height: number,
   targetWidth: number, targetHeight: number
 ): RawRaster {
-  if (![width, height, targetWidth, targetHeight].every(v => Number.isSafeInteger(v) && v > 0) ||
-      targetWidth > width || targetHeight > height ||
+  if (![width, height, targetWidth, targetHeight].every(
+    value => Number.isSafeInteger(value) && value > 0
+  ) || targetWidth > width || targetHeight > height ||
       source.length !== width * height * 4) {
     throw new RasterError('INVALID_REQUEST', 'Lanczos3 requires valid RGBA and no enlargement');
   }
+
   const pixels = targetWidth * targetHeight;
   const intermediatePixels = Math.min(targetWidth * height, width * targetHeight);
   if (pixels > MAX_WORKING_PIXELS || intermediatePixels > MAX_WORKING_PIXELS) {
@@ -91,21 +132,9 @@ export function resizeRgbaLanczos3(
   const horizontalFirst = targetWidth * height <= width * targetHeight;
   const firstWidth = horizontalFirst ? targetWidth : width;
   const firstHeight = horizontalFirst ? height : targetHeight;
-  const first = pass(source, width, height, firstWidth, firstHeight, horizontalFirst, false);
-  const second = pass(first, firstWidth, firstHeight,
-    targetWidth, targetHeight, !horizontalFirst, true);
-  const data = new Uint8ClampedArray(pixels * 4);
-  for (let i = 0; i < data.length; i += 4) {
-    const alpha = Math.max(0, Math.min(255, second[i + 3]!));
-    data[i + 3] = alpha;
-    if (alpha > 0.000001) {
-      const factor = 255 / alpha;
-      data[i] = second[i]! * factor;
-      data[i + 1] = second[i + 1]! * factor;
-      data[i + 2] = second[i + 2]! * factor;
-    } else {
-      data[i] = data[i + 1] = data[i + 2] = 0;
-    }
-  }
+  const first = pass(source, width, height, firstWidth, firstHeight,
+    horizontalFirst, false, false) as Float32Array<ArrayBuffer>;
+  const data = pass(first, firstWidth, firstHeight, targetWidth, targetHeight,
+    !horizontalFirst, true, true) as Uint8ClampedArray<ArrayBuffer>;
   return { width: targetWidth, height: targetHeight, data };
 }

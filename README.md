@@ -2,7 +2,7 @@
 
 Independent, open-source raster processing core for safe, reusable image transformations.
 
-**Status:** `0.5.0-alpha.3` — experimental. The repository contains source code; no npm publication is implied.
+**Status:** `0.5.0-alpha.4` — experimental. The repository contains source code; no npm publication is implied.
 
 ## Scope
 
@@ -74,7 +74,7 @@ const result = await core.process(source, {
 const output = new Blob([new Uint8Array(result.data)], { type: 'image/webp' });
 ```
 
-The browser adapter currently decodes/encodes **still PNG, JPEG and WebP** using browser-native codecs (WebP must be supported by the browser). **AVIF is not implemented** in this adapter. Browsers can silently substitute PNG for unsupported encoders, so every encoded MIME result is checked. An unchanged image can be returned byte-identically. PNG re-encoding is lossless at the canvas pixel representation, but no cross-engine pixel identity is promised. Browser WebP/AVIF lossless modes and explicit Lanczos/Mitchell/MKS2021 kernels are **rejected** rather than inaccurately emulated. Native smoothing is used for default resize, and explicit `nearest` uses nearest neighbor. Embedded ICC metadata is **not preserved** during browser transformations; if the input contains ICC, `colorProfile: 'srgb'` must be explicitly selected. Canvas color management can vary by browser and needs independent validation.
+The browser adapter currently decodes/encodes **still PNG, JPEG and WebP** using browser-native codecs (WebP must be supported by the browser). **AVIF is not implemented** in this adapter. Browsers can silently substitute PNG for unsupported encoders, so every encoded MIME result is checked. An unchanged image can be returned byte-identically. PNG re-encoding is lossless at the canvas pixel representation, but no cross-engine pixel identity is promised. Browser WebP/AVIF lossless modes and unsupported Mitchell/MKS2021 kernels are **rejected** rather than inaccurately emulated. Default downscaling now uses a bounded, alpha-aware browser Lanczos3 implementation (different from libvips); explicit `nearest` remains available. Embedded ICC metadata is **not preserved** during browser transformations; if the input contains ICC, `colorProfile: 'srgb'` must be explicitly selected. Canvas color management can vary by browser and needs independent validation.
 
 The browser entry imports **no Node built-ins or Sharp code**. Use this entry directly rather than the Node default export in browser-targeted applications. See [browser support policy](docs/browser-adapter.md).
 
@@ -99,6 +99,7 @@ See [docs/quality-policy.md](docs/quality-policy.md) for alpha/ICC/orientation r
 Run `npm run check` for automated fidelity, optimization and robustness regressions.
 Optimization now requires **both** global sampled similarity and salient local-detail similarity to meet the configured `minScore`. Scores differ from alpha.2; they are still only heuristics.
 Run `npm run benchmark` for repeatable synthetic image timing/size comparisons;
+run `npm run benchmark:browser` for synthetic browser-worker timings, known buffer allocations and UI-frame responsiveness.
 use `npm run benchmark -- --iterations=5 --json` for structured results.
 Benchmark samples are synthetic and are not a substitute for licensed real-world
 photography, color or tiny-text validation. See [docs/benchmarks.md](docs/benchmarks.md).
