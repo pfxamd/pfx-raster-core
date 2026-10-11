@@ -18,6 +18,9 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - run: npm install --no-audit --no-fund
       - run: npm run check
+      - name: Real Chromium browser integration smoke
+        if: matrix.node-version == 22
+        run: npm run check:browser:runtime
       - run: npm run benchmark:smoke
       - name: Record synthetic benchmarks (not a performance gate)
         if: matrix.node-version == 22
