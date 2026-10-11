@@ -31,6 +31,7 @@ jobs:
       - name: Profile real Node/Sharp process RSS (observational)
         if: matrix.node-version == 22
         run: |
+          set -o pipefail
           node benchmarks/node-memory.mjs | tee node-memory-report.json
           node -e "const r=require('./node-memory-report.json'); if(r.schemaVersion!==1 || r.workloads.length!==3) process.exit(1)"
       - name: Upload Node RSS profiling report
