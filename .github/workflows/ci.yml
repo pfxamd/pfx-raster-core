@@ -32,3 +32,6 @@ jobs:
       - name: Verify installed tarball and public API entrypoints
         if: matrix.node-version == 22
         run: npm run check:package
+      - name: Probe public npm registry package status (read-only)
+        if: matrix.node-version == 22
+        run: node scripts/check-registry.mjs
