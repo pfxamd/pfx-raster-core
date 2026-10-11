@@ -32,6 +32,7 @@ export interface ResizeRequest {
   /**
    * Resampling kernel. Lanczos3 is the photographic default;
    * nearest preserves hard pixel boundaries when downscaling.
+   * When omitted, Node uses Lanczos3 while browsers use native high-quality smoothing.
    */
   readonly kernel?: ResizeKernel;
 }
@@ -54,7 +55,8 @@ export interface ProcessPlan {
   readonly format: RasterFormat;
   readonly maxWidth?: number;
   readonly maxHeight?: number;
-  readonly resizeKernel: ResizeKernel;
+  /** Auto selects the native platform default; explicitly requested kernels remain strict. */
+  readonly resizeKernel: ResizeKernel | 'auto';
   readonly quality?: number;
   readonly lossless: boolean;
   readonly jpegBackground?: string;
