@@ -16,4 +16,12 @@ assert.ok(inputs.every(path => !path.startsWith('node:')), 'Browser bundle has n
 const content = await readFile(resolve(root, 'dist/browser-bundle.mjs'), 'utf8');
 assert.ok(!content.includes('require("node:'), 'Bundled browser source must not require Node');
 await import(resolve(root, 'dist/src/browser.js'));
-process.stdout.write('PASS: Browser bundle has no Sharp/Node runtime dependency\n');
+const headerManifest = JSON.parse(await readFile(resolve(root, 'dist/header-only-metafile.json'), 'utf8'));
+const headerPaths = Object.keys(headerManifest.inputs);
+assert.ok(headerPaths.some(path => path.endsWith('browser/header.ts')));
+assert.ok(headerPaths.every(path => !/(sharp|canvas|browser-engine|resample|optimizer|node_modules)/i.test(path)),
+  'Header-only browser bundle must not import Canvas, decoder, resampler, Sharp or optimizer');
+const headerBundle = await readFile(resolve(root, 'dist/header-only-bundle.mjs'), 'utf8');
+assert.ok(headerBundle.length < 25_000, 'Header-only helper unexpectedly large');
+await import(resolve(root, 'dist/src/browser/header-only.js'));
+process.stdout.write('PASS: Browser and lightweight header-only bundles contain no native codecs or Node runtime dependencies\\n');
