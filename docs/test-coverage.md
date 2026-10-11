@@ -1,6 +1,6 @@
 # Raster Core test coverage and measurement limits
 
-Version: 0.6.0-alpha.1. This file records **test coverage**, not a claim of device-wide production guarantees.
+Version: 0.6.0-alpha.2. This file records **test coverage**, not a claim of device-wide production guarantees.
 
 ## Verified automatically
 
@@ -17,6 +17,14 @@ Version: 0.6.0-alpha.1. This file records **test coverage**, not a claim of devi
 - Production-grade real photography fidelity across color profiles, every device/browser, and varied content.
 - Full validation of image payload CRCs, JPEG entropy data, WebP payload decoding by the lightweight header-only API.
 - Unbounded hostile-input resistance, native codec vulnerabilities, or long-run sustained throughput.
+
+## Instrumented Node memory and Chromium UI measurements
+
+The profiling scripts record Node/Sharp process RSS at 10 ms intervals and
+OS process-lifetime RSS high-water during multi-megapixel synthetic conversion,
+with Chromium Worker wall time and observed frame gaps. These numbers are
+observations and CI artifacts, not proof of a per-image browser/device peak.
+See [benchmark methodology](benchmarks.md).
 
 ## Next measurement gate
 

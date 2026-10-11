@@ -2,7 +2,7 @@
 
 Independent, open-source raster processing core for safe, reusable image transformations.
 
-**Status:** `0.6.0-alpha.1` — experimental. Versioned standalone distribution is provided through automated GitHub Releases, without a registry account.
+**Status:** `0.6.0-alpha.2` — experimental. Versioned standalone distribution is provided through automated GitHub Releases, without a registry account.
 
 ## Scope
 
@@ -135,6 +135,7 @@ The current regression coverage and explicitly unmeasured risks are documented i
 Run `npm run check` for automated fidelity, optimization and robustness regressions.
 Optimization now requires **both** global sampled similarity and salient local-detail similarity to meet the configured `minScore`. Scores differ from alpha.2; they are still only heuristics.
 Run `npm run benchmark` for repeatable synthetic image timing/size comparisons;
+run `npm run benchmark:memory` for real Node-process resident memory samples, OS-reported process high-water and multi-megapixel synthetic conversion timing (not device peak memory);
 run `npm run benchmark:browser` for synthetic browser-worker timings, known buffer allocations and UI-frame responsiveness.
 use `npm run benchmark -- --iterations=5 --json` for structured results.
 Benchmark samples are synthetic and are not a substitute for licensed real-world
