@@ -99,7 +99,7 @@ for (const spec of definitions) {
     resize: { width: spec.targetWidth, kernel: 'lanczos3' },
     format: spec.outputFormat,
     colorProfile: 'srgb',
-    quality: 86,
+    ...(spec.outputFormat === 'webp' ? { quality: 86 } : {}),
   });
   await execute(); // Warm up native codecs separately from measured runs.
   const measurements = [];
