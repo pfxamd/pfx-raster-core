@@ -3,8 +3,8 @@
   "kind": "core",
   "product": "PFx Raster Core",
   "channel": "Alpha",
-  "version": "0.6.0-alpha.3",
-  "label": "Alpha 0.6.0-alpha.3",
-  "commit": "a93c1f28cbf362e033cf86e55332ca8b7112c50c",
-  "sourceDate": "2026-10-11T18:11:12+01:00"
+  "version": "0.6.0-alpha.4",
+  "label": "Alpha 0.6.0-alpha.4",
+  "commit": "5d5bae35c73136c28c10c6b5698233edb14678c3",
+  "sourceDate": "2026-10-21T14:52:39+01:00"
 }
