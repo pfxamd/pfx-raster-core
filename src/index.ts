@@ -1,3 +1,19 @@
+/**
+ * ┌──────────────────────────────────────────────┐
+ * │                                              │
+ * │  PFxamd                                      │
+ * │  Ahmed                                       │
+ * │                                              │
+ * └──────────────────────────────────────────────┘
+ *
+ * @project     PFx Raster Core
+ * @author      Ahmed
+ * @brand       PFxamd
+ * @website     https://www.pfxamd.com
+ * @repository  https://github.com/pfxamd/pfx-raster-core
+ * @license     Apache-2.0
+ */
+
 export { createRasterCore, RasterCore } from './core/core.js';
 export type { RasterCoreOptions } from './core/core.js';
 export { RasterError } from './core/errors.js';
