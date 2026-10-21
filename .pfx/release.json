@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "product": "PFx Raster Core",
+  "channel": "Alpha",
+  "baseVersion": "0.6.0-alpha.3",
+  "baseline": "a93c1f28cbf362e033cf86e55332ca8b7112c50c",
+  "sourcePaths": [
+    "src",
+    "packages",
+    "crates",
+    "bindings",
+    "tokens",
+    "config",
+    "schema",
+    "scripts",
+    "package.json",
+    "package-lock.json",
+    "pnpm-lock.yaml",
+    "Cargo.toml",
+    "Cargo.lock",
+    ".pfx",
+    ".github/workflows"
+  ],
+  "jsonVersions": [
+    "package.json"
+  ],
+  "cargoVersions": [],
+  "cargoNames": [],
+  "npmLocks": [],
+  "cargoLocks": []
+}

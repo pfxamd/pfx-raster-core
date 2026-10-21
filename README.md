@@ -1,8 +1,10 @@
 # PFx Raster Core
 
+[![Core version](./version-badge.svg)](./version.json)
+
 Independent, open-source raster processing core for safe, reusable image transformations.
 
-**Status:** `0.6.0-alpha.3` — experimental. Versioned standalone distribution is provided through automated GitHub Releases, without a registry account.
+**Status:** see the current version badge — experimental. Versioned standalone distribution is provided through automated GitHub Releases, without a registry account.
 
 ## Scope
 
@@ -159,3 +161,7 @@ Please include tests with changes to decoding, validation, or processing. Run `n
 ## License
 
 Apache-2.0. See [LICENSE](LICENSE).
+
+## Automatic source versions
+
+The badge, `version.json`, and package manifests share one Git-derived version. Run `node .pfx/release.mjs --sync` before a local build. Full Git history is required. Rebuilding the same source keeps the same number; metadata-only bot commits do not advance it. See [.pfx/RELEASE.md](.pfx/RELEASE.md).
